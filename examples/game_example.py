@@ -18,7 +18,9 @@ from __future__ import print_function
 
 import numpy as np
 from hanabi_learning_environment import pyhanabi
-
+# Import agents
+from hanabi_learning_environment.agents.simple_agent import SimpleAgent
+from hanabi_learning_environment.agents.random_agent import RandomAgent
 
 def run_game(game_parameters):
   """Play a game, selecting random actions."""
@@ -106,8 +108,55 @@ def run_game(game_parameters):
   print("score: {}".format(state.score()))
 
 
+def mb_run_game(game_parameters):
+  ''' Run a game with Michael edits.
+  :param game_parameters: Dictionary:
+  Possible parameters include
+    "players": 2 <= number of players <= 5
+    "colors": 1 <= number of different card colors in deck <= 5
+    "rank": 1 <= number of different card ranks in deck <= 5
+    "hand_size": 1 <= number of cards in player hand
+    "max_information_tokens": 1 <= maximum (and initial) number of info tokens.
+    "max_life_tokens": 1 <= maximum (and initial) number of life tokens.
+    "seed": random number seed. -1 to use system random device to get seed.
+    "random_start_player": boolean. If true, start with random player, not 0.
+    "observation_type": int AgentObservationType.
+    """
+  :return: null
+  '''
+  # pyhanabi is the python C++ wrapper for the game.
+  # Need to use it as an API into game interface.
+  game = pyhanabi.HanabiGame(game_parameters)
+  print(game.parameter_string(), end="")
+  obs_encoder = pyhanabi.ObservationEncoder(
+    game, enc_type=pyhanabi.ObservationEncoderType.CANONICAL)
+  state = game.new_initial_state()
+  while not state.is_terminal():
+    if state.cur_player() == pyhanabi.CHANCE_PLAYER_ID:
+      state.deal_random_card()
+      continue
+
+    observation = state.observation(state.cur_player())
+    legal_moves = state.legal_moves()
+    print("")
+    print("Number of legal moves: {}".format(len(legal_moves)))
+    move = np.random.choice(legal_moves)
+    print("Chose random legal move: {}".format(move))
+    state.apply_move(move)
+
+  print("")
+  print("Game done. Terminal state:")
+  print("")
+  print(state)
+  print("")
+  print("score: {}".format(state.score()))
+
+
 if __name__ == "__main__":
   # Check that the cdef and library were loaded from the standard paths.
   assert pyhanabi.cdef_loaded(), "cdef failed to load"
   assert pyhanabi.lib_loaded(), "lib failed to load"
-  run_game({"players": 3, "random_start_player": True})
+  # run_game({"players": 3, "random_start_player": True})
+  mb_run_game({"players": 3, "random_start_player": False, "seed":123})
+
+

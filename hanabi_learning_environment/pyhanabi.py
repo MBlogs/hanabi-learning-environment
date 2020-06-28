@@ -19,6 +19,8 @@ import cffi
 import enum
 import sys
 
+
+
 DEFAULT_CDEF_PREFIXES = (None, ".", os.path.dirname(__file__), "/include")
 DEFAULT_LIB_PREFIXES = (None, ".", os.path.dirname(__file__), "/lib")
 PYHANABI_HEADER = "pyhanabi.h"

@@ -1,18 +1,4 @@
-# Copyright 2018 Google LLC
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    https://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-"""Simple Agent."""
-
+# MB Agent created during testing
 from hanabi_learning_environment.rl_env import Agent
 
 class SimpleAgent(Agent):
@@ -33,6 +19,7 @@ class SimpleAgent(Agent):
     """Act based on an observation."""
     if observation['current_player_offset'] != 0:
       return None
+    # observation contains all information that an agent can see.
 
     # Check if there are any pending hints and play the card corresponding to
     # the hint.

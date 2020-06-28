@@ -23,7 +23,6 @@ from hanabi_learning_environment.agents.simple_agent import SimpleAgent
 
 AGENT_CLASSES = {'SimpleAgent': SimpleAgent, 'RandomAgent': RandomAgent}
 
-
 class Runner(object):
   """Runner class."""
 
@@ -64,7 +63,7 @@ class Runner(object):
     return rewards
 
 if __name__ == "__main__":
-  flags = {'players': 2, 'num_episodes': 1, 'agent_class': 'SimpleAgent'}
+  flags = {'players': 3, 'num_episodes': 1, 'agent_class': 'SimpleAgent'}
   options, arguments = getopt.getopt(sys.argv[1:], '',
                                      ['players=',
                                       'num_episodes=',
