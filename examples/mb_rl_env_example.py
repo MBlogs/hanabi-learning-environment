@@ -14,7 +14,6 @@
 """A simple episode runner using the RL environment."""
 
 from __future__ import print_function
-
 import sys
 import getopt
 from hanabi_learning_environment import rl_env
@@ -40,7 +39,7 @@ class Runner(object):
     for episode in range(flags['num_episodes']):
       observations = self.environment.reset()
       # MB: Allow parsing of different Agents. N
-      # TODO: Assumes config is the same for all agents. Will need to be different for MCTS config.
+      # TODO: Assumes config is the same for all agents. Will need to be different for config.
       agents = [agent_class(self.agent_config) for agent_class in self.agent_classes]
       done = False
       episode_reward = 0
@@ -76,10 +75,10 @@ def fireworks_score(fireworks):
 
 def print_observation(observation):
   ''' MB: Utility function. Print important information about the state'''
-  # TODO: An observation in the rl_env is lacking a card_knowledge field
+  # TODO: An observation in the rl_env is lacking the full card knowledge from the state
   print("\n")
   print('------- Observation from Player:{} -------'.format(observation['current_player']))
-  # print("Observation keys: {}".format(observation.keys()))
+  print("Observation keys: {}".format(observation.keys()))
   print("Number of players: {}".format(observation['num_players']))
   print("Current Player: {}".format(observation['current_player']))
   print("Current Player Offset: {}".format(observation['current_player_offset']))
@@ -91,6 +90,7 @@ def print_observation(observation):
   print("Fireworks Score: {}".format(fireworks_score(observation['fireworks'])))
   print("Legal Moves: {}".format(observation['legal_moves']))
   print("Observed Hands: {}".format(observation['observed_hands']))
+  print("Card Knowledge: {}".format(observation['card_knowledge']))
   print("\n")
 
 

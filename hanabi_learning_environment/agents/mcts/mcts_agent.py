@@ -4,11 +4,17 @@ from hanabi_learning_environment.rl_env import Agent
 class RISMCTSAgent(Agent):
   """Agent based on Redeterminizing Information Set Monte Carlo Tree Search"""
 
-  def __init__(self, config, *args, **kwargs):
+  def __init__(self, config, explorationC=0.7, rolloutDepth, treeDepthMul, timeLimit=30, **kwargs):
     """Initialize the agent."""
     self.config = config
     # Extract max info tokens or set default to 8.
     self.max_information_tokens = config.get('information_tokens', 8)
+    self.explorationC = explorationC
+    self.rolloutDepth = rolloutDepth
+    self.explorationC = explorationC
+
+
+
 
   @staticmethod
   def playable_card(card, fireworks):
