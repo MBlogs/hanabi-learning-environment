@@ -1,7 +1,7 @@
 # MB Agent created during testing
 from hanabi_learning_environment.rl_env import Agent
 
-class SimpleAgent(Agent):
+class RISMCTSAgent(Agent):
   """Agent that applies a simple heuristic."""
 
   def __init__(self, config, *args, **kwargs):
@@ -17,6 +17,7 @@ class SimpleAgent(Agent):
 
   def act(self, observation):
     """Act based on an observation."""
+    print("Computing RISMCTSAgent action...")
     if observation['current_player_offset'] != 0:
       return None
     # observation contains all information that an agent can see.
@@ -36,7 +37,7 @@ class SimpleAgent(Agent):
         player_hints = observation['card_knowledge'][player_offset]
         # Check if the card in the hand of the opponent is playable.
         for card, hint in zip(player_hand, player_hints):
-          if SimpleAgent.playable_card(card,
+          if RISMCTSAgent.playable_card(card,
                                        fireworks) and hint['color'] is None:
             return {
                 'action_type': 'REVEAL_COLOR',

@@ -139,7 +139,7 @@ def mb_run_game(game_parameters):
     observation = state.observation(state.cur_player())
     legal_moves = state.legal_moves()
     print("")
-    print("Number of legal moves: {}".format(len(legal_moves)))
+    # print("Number of legal moves: {}".format(len(legal_moves)))
     move = np.random.choice(legal_moves)
     print("Chose random legal move: {}".format(move))
     state.apply_move(move)
@@ -149,8 +149,6 @@ def mb_run_game(game_parameters):
   print("")
   print(state)
   print("")
-  print("score: {}".format(state.score()))
-
 
 if __name__ == "__main__":
   # Check that the cdef and library were loaded from the standard paths.
