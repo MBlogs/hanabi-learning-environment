@@ -216,10 +216,16 @@ class HanabiEnv(Environment):
     obs["current_player"] = self.state.cur_player()
     return obs
 
-  def tweak_state(self):
-      """MB: Change cards in a player's hand"""
+  def edit_state(self, action):
+      """MB: Change cards in a player's hand by building, then applying a move"""
       print("Player to change hand is: {}".format(self.state.cur_player()))
-      self.state = self.state.deal_card()
+      # Experiment: Try to return the card in index 0 to the deck
+      # (temporarily putting CHANCE_PLAYER_ID to -1 as if they have discarded leading to a draw card)
+      action = {'action_type': 'RETURN', 'card_index': 0}
+      action = self._build_move(action)
+      self.state.apply_move(action)
+      while self.state.cur_player() == pyhanabi.CHANCE_PLAYER_ID:
+          self.state.deal_random_card()
 
   def vectorized_observation_shape(self):
     """Returns the shape of the vectorized observation.
@@ -450,6 +456,7 @@ class HanabiEnv(Environment):
         actions are supported:
           - { 'action_type': 'PLAY', 'card_index': int }
           - { 'action_type': 'DISCARD', 'card_index': int }
+          - {'action_type': 'RETURN;, 'card_index': int }
           - {
               'action_type': 'REVEAL_COLOR',
               'color': str,
@@ -480,6 +487,9 @@ class HanabiEnv(Environment):
     elif action_type == "DISCARD":
       card_index = action["card_index"]
       move = pyhanabi.HanabiMove.get_discard_move(card_index=card_index)
+    elif action_type == "RETURN":
+      card_index = action["card_index"]
+      move = pyhanabi.HanabiMove.get_return_move(card_index=card_index)
     elif action_type == "REVEAL_RANK":
       target_offset = action["target_offset"]
       rank = action["rank"]

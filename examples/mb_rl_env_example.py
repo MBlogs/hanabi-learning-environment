@@ -52,8 +52,7 @@ class Runner(object):
           if observation['current_player'] == agent_id:
             assert action is not None
             current_player_action = action
-            # MB: Print observation from agents point of view
-            print_observation(observation)
+            print_state(self)
           else:
             assert action is None
         # Make an environment step.
@@ -74,6 +73,9 @@ def fireworks_score(fireworks):
   for f, s in fireworks.items():
     score += s
   return score
+
+def print_state(self):
+  print("-----------------------------------------------\n{}".format(self.environment.state))
 
 def print_observation(observation):
   ''' MB: Utility function. Print important information about the state'''

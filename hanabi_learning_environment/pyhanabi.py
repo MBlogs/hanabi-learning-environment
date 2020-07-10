@@ -291,6 +291,7 @@ class HanabiMoveType(enum.IntEnum):
   REVEAL_COLOR = 3
   REVEAL_RANK = 4
   DEAL = 5
+  #TODO: Add other move indexes
 
 
 class HanabiMove(object):
@@ -330,6 +331,11 @@ class HanabiMove(object):
   def get_discard_move(card_index):
     c_move = ffi.new("pyhanabi_move_t*")
     assert lib.GetDiscardMove(card_index, c_move)
+    return HanabiMove(c_move)
+
+  def get_return_move(card_index):
+    c_move = ffi.new("pyhanabi_move_t*")
+    assert lib.GetReturnMove(card_index, c_move)
     return HanabiMove(c_move)
 
   @staticmethod
