@@ -14,7 +14,6 @@ from .policy_pred import policy_pred
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Conv1D, Flatten, MaxPooling1D, BatchNormalization
 from tensorflow.keras.layers import Activation, Dropout
-
 import numpy as np
 
 

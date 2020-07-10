@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied
 
 import numpy as np
-from hanabi_learning_environment.agents.ref_mcts.wang_state_translate import state_translator
+from hanabi_learning_environment.agents.ref_mcts.wang.state_translate import state_translator
 
 class Belief():
 

@@ -18,10 +18,12 @@ import sys
 import getopt
 from hanabi_learning_environment import rl_env
 from hanabi_learning_environment.agents.random_agent import RandomAgent
-from hanabi_learning_environment.agents.mcts.ris_mcts_agent import RISMCTSAgent
 from hanabi_learning_environment.agents.simple_agent import SimpleAgent
+from hanabi_learning_environment.agents.mcts.mcts_agent import MCTSAgent
+from hanabi_learning_environment.agents.mcts.ris_mcts_agent import RISMCTSAgent
+# from hanabi_learning_environment.agents.ref_mcts.wang.wang_mcts import MCAgent
 
-AGENT_CLASSES = {'SimpleAgent': SimpleAgent, 'RandomAgent': RandomAgent, 'RISMCTSAgent': RISMCTSAgent}
+AGENT_CLASSES = {'SimpleAgent': SimpleAgent, 'RandomAgent': RandomAgent, 'MCTSAgent': MCTSAgent}
 
 class Runner(object):
   """Runner class."""
@@ -91,12 +93,16 @@ def print_observation(observation):
   print("Legal Moves: {}".format(observation['legal_moves']))
   print("Observed Hands: {}".format(observation['observed_hands']))
   print("Card Knowledge: {}".format(observation['card_knowledge']))
+  print("Pyhanabi is the direct HanabiObservation class and has additional functions like")
+  print(".card_knowledge() (list of HanabiCardKnowledge objects):{}".format(observation['pyhanabi'].card_knowledge()))
+  print(".observed_hands() {}".format(observation['pyhanabi'].observed_hands()))
+  print(".card_playable_on_fireworks(card,value)".format(observation['pyhanabi']))
   print("\n")
 
 
 if __name__ == "__main__":
   # MB: agent_class changed to agent_classes
-  flags = {'players': 3, 'num_episodes': 1, 'agent_classes': ['SimpleAgent', 'SimpleAgent', 'RISMCTSAgent']}
+  flags = {'players': 3, 'num_episodes': 1, 'agent_classes': ['SimpleAgent', 'SimpleAgent', 'SimpleAgent']}
   options, arguments = getopt.getopt(sys.argv[1:], '',
                                      ['players=',
                                       'num_episodes=',

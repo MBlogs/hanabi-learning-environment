@@ -216,6 +216,11 @@ class HanabiEnv(Environment):
     obs["current_player"] = self.state.cur_player()
     return obs
 
+  def tweak_state(self):
+      """MB: Change cards in a player's hand"""
+      print("Player to change hand is: {}".format(self.state.cur_player()))
+      self.state = self.state.deal_card()
+
   def vectorized_observation_shape(self):
     """Returns the shape of the vectorized observation.
 
@@ -417,7 +422,7 @@ class HanabiEnv(Environment):
         card.to_dict() for card in observation.discard_pile()
     ]
 
-    # Return hints received.
+    # Return hints received (MB: Surely this can be improved with previous knowledge?)
     obs_dict["card_knowledge"] = []
     for player_hints in observation.card_knowledge():
       player_hints_as_dicts = []

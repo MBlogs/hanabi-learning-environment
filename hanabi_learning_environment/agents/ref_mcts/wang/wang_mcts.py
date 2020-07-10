@@ -16,11 +16,9 @@ import time
 import random
 import numpy as np
 from hanabi_learning_environment.rl_env import Agent
-from hanabi_learning_environment.agents.ref_mcts.wang_state_translate import state_translator
-from hanabi_learning_environment.agents.ref_mcts import wang_bayes
-from predictors.conv_pred import conv_pred
-
-
+from hanabi_learning_environment.agents.ref_mcts.wang.state_translate import state_translator
+from hanabi_learning_environment.agents.ref_mcts.wang import bayes
+from hanabi_learning_environment.agents.ref_mcts.wang.conv_pred import conv_pred
 random.seed(datetime.now())
 
 
@@ -33,7 +31,7 @@ class MCAgent(Agent):
         """Initialize the agent"""
         self.config = config
         self.max_depth = 3
-        self.belief = wang_bayes.Belief(config['players'])
+        self.belief = bayes.Belief(config['players'])
 
         # load the predictor
 

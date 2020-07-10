@@ -346,6 +346,14 @@ void StateDealRandomCard(pyhanabi_state_t* state) {
   hanabi_state->ApplyRandomChance();
 }
 
+void StateDealCard(pyhanabi_state_t* state) {
+  REQUIRE(state != nullptr);
+  REQUIRE(state->state != nullptr);
+  auto hanabi_state =
+      reinterpret_cast<hanabi_learning_env::HanabiState*>(state->state);
+  hanabi_state->ApplyRandomChance();
+}
+
 int StateDeckSize(pyhanabi_state_t* state) {
   REQUIRE(state != nullptr);
   REQUIRE(state->state != nullptr);

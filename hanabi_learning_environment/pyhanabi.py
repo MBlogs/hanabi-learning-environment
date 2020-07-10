@@ -19,8 +19,6 @@ import cffi
 import enum
 import sys
 
-
-
 DEFAULT_CDEF_PREFIXES = (None, ".", os.path.dirname(__file__), "/include")
 DEFAULT_LIB_PREFIXES = (None, ".", os.path.dirname(__file__), "/lib")
 PYHANABI_HEADER = "pyhanabi.h"
@@ -569,6 +567,10 @@ class HanabiState(object):
   def deal_random_card(self):
     """If cur_player == CHANCE_PLAYER_ID, make a random card-deal move."""
     lib.StateDealRandomCard(self._state)
+
+  def deal_card(self, card):
+    """Deal a very particular card to the player"""
+    lib.StateDealCard(self._state)
 
   def player_hands(self):
     """Returns a list of all hands, with cards ordered oldest to newest."""
