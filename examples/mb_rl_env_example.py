@@ -60,8 +60,10 @@ class Runner(object):
                                             current_player_action))
         observations, reward, done, unused_info = self.environment.step(
             current_player_action)
+        # MB: Try to perform an index 0 card return
+        self.environment.edit_state({'action_type': 'RETURN', 'card_index': 0})
         episode_reward += reward
-      # Rewards seems pretty funky. It's zero for all non-perfect games?
+      # MB: Rewards seems pretty funky. It's zero for all non-perfect games? A: Yes may want to change that
       rewards.append(episode_reward)
       print('Running episode: %d' % episode)
       print('Max Reward: %.3f' % max(rewards))

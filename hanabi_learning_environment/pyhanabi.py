@@ -291,8 +291,7 @@ class HanabiMoveType(enum.IntEnum):
   REVEAL_COLOR = 3
   REVEAL_RANK = 4
   DEAL = 5
-  #TODO: Add other move indexes
-
+  RETURN = 6
 
 class HanabiMove(object):
   """Description of an agent move or chance event.
@@ -579,7 +578,7 @@ class HanabiState(object):
     lib.StateDealCard(self._state)
 
   def return_card(self, color, rank):
-    """ MB: return card to the deck """
+    """MB: return card to the deck. Card knowledge is NOT updated or changed though"""
     # lib StateReturnCard(self._state)
 
   def player_hands(self):
@@ -610,6 +609,8 @@ class HanabiState(object):
 
   def legal_moves(self):
     """Returns list of legal moves for currently acting player."""
+    # MB: Work was needed to allow Return to be a valid move here.
+    # MB: More work will be needed to make sure Agents don't think it's a valid move
     moves = []
     c_movelist = lib.StateLegalMoves(self._state)
     num_moves = lib.NumMoves(c_movelist)

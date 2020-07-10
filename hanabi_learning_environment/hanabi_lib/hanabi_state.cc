@@ -64,7 +64,7 @@ HanabiState::HanabiDeck::HanabiDeck(const HanabiGame& game)
 }
 
 HanabiCard HanabiState::HanabiDeck::DealCard(std::mt19937* rng) {
-  // MB: DealCard function
+  // MB: DealCard function. Need a AddCard option?
   if (Empty()) {
     return HanabiCard();
   }
@@ -89,6 +89,14 @@ HanabiCard HanabiState::HanabiDeck::DealCard(int color, int rank) {
   return HanabiCard(IndexToColor(index), IndexToRank(index));
 }
 
+void HanabiState::HanabiDeck::ReturnCard(int color, int rank) {
+  // MB: When a card is being Returned from a Hand to the deck
+  // Do we need to check for if it's valid to return the card? Probs not.
+  int index = CardToIndex(color, rank);
+  ++card_count_[index];
+  ++total_count_;
+}
+
 HanabiState::HanabiState(const HanabiGame* parent_game, int start_player)
     : parent_game_(parent_game),
       deck_(*parent_game),
@@ -104,6 +112,7 @@ HanabiState::HanabiState(const HanabiGame* parent_game, int start_player)
       turns_to_play_(parent_game->NumPlayers()) {}
 
 void HanabiState::AdvanceToNextPlayer() {
+  // MB: how will this work for RETURN?
   if (!deck_.Empty() && PlayerToDeal() >= 0) {
     cur_player_ = kChancePlayerId;
   } else {
@@ -183,6 +192,11 @@ bool HanabiState::MoveIsLegal(HanabiMove move) const {
         return false;
       }
       break;
+    case HanabiMove::kReturn:
+      if (move.CardIndex() >= hands_[cur_player_].Cards().size()) {
+        return false;
+      }
+      break;
     case HanabiMove::kPlay:
       if (move.CardIndex() >= hands_[cur_player_].Cards().size()) {
         return false;
@@ -225,6 +239,7 @@ void HanabiState::ApplyMove(HanabiMove move) {
   if (deck_.Empty()) {
     --turns_to_play_;
   }
+  // MB: Do we really want a RETURN move to add to history? Might have to deal with this in history
   HanabiHistoryItem history(move);
   history.player = cur_player_;
   switch (move.MoveType()) {
@@ -246,6 +261,11 @@ void HanabiState::ApplyMove(HanabiMove move) {
       history.color = hands_[cur_player_].Cards()[move.CardIndex()].Color();
       history.rank = hands_[cur_player_].Cards()[move.CardIndex()].Rank();
       hands_[cur_player_].RemoveFromHand(move.CardIndex(), &discard_pile_);
+      break;
+    case HanabiMove::kReturn:
+      //MB: Hopefully we can just silently return from hand to deck. Note: Knowledge is NOT updated
+      hands_[cur_player_].ReturnFromHand(move.CardIndex());
+      deck_.ReturnCard(hands_[cur_player_].Cards()[move.CardIndex()].Color(),hands_[cur_player_].Cards()[move.CardIndex()].Rank());
       break;
     case HanabiMove::kPlay:
       history.color = hands_[cur_player_].Cards()[move.CardIndex()].Color();

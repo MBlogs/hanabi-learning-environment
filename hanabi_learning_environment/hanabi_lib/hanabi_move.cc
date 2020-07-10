@@ -26,6 +26,9 @@ bool HanabiMove::operator==(const HanabiMove& other_move) const {
     case kPlay:
     case kDiscard:
       return CardIndex() == other_move.CardIndex();
+     case kReturn:
+      //MB: Unsure if correct, just copied Discard
+      return CardIndex() == other_move.CardIndex();
     case kRevealColor:
       return TargetOffset() == other_move.TargetOffset() &&
              Color() == other_move.Color();

@@ -222,10 +222,10 @@ class HanabiEnv(Environment):
       # Experiment: Try to return the card in index 0 to the deck
       # (temporarily putting CHANCE_PLAYER_ID to -1 as if they have discarded leading to a draw card)
       action = {'action_type': 'RETURN', 'card_index': 0}
-      action = self._build_move(action)
-      self.state.apply_move(action)
+      action = self._build_move(action) #this just gets the move object
+      self.state.apply_move(action) #this applies the move object
       while self.state.cur_player() == pyhanabi.CHANCE_PLAYER_ID:
-          self.state.deal_random_card()
+          self.state.deal_specific_card('Y',5)
 
   def vectorized_observation_shape(self):
     """Returns the shape of the vectorized observation.
@@ -364,8 +364,8 @@ class HanabiEnv(Environment):
     last_score = self.state.score()
     # Apply the action to the state.
     self.state.apply_move(action)
-
     while self.state.cur_player() == pyhanabi.CHANCE_PLAYER_ID:
+      # MB: Could change logic to pick valid cards instead
       self.state.deal_random_card()
 
     observation = self._make_observation_all_players()
@@ -488,6 +488,7 @@ class HanabiEnv(Environment):
       card_index = action["card_index"]
       move = pyhanabi.HanabiMove.get_discard_move(card_index=card_index)
     elif action_type == "RETURN":
+      print("Trying to build RETURN move in rl_env")
       card_index = action["card_index"]
       move = pyhanabi.HanabiMove.get_return_move(card_index=card_index)
     elif action_type == "REVEAL_RANK":
@@ -504,12 +505,15 @@ class HanabiEnv(Environment):
     else:
       raise ValueError("Unknown action_type: {}".format(action_type))
 
-    legal_moves = self.state.legal_moves()
-    assert (str(move) in map(
+    # MB: Make sure an Agent never thinks Return is a valid move though
+    # MB: Hack for now. Skip the check if RETURN and see what happens
+    if action_type != "RETURN":
+      legal_moves = self.state.legal_moves()
+      assert (str(move) in map(
         str,
         legal_moves)), "Illegal action: {}. Move should be one of : {}".format(
             move, legal_moves)
-
+    print("MB: Move built")
     return move
 
 
