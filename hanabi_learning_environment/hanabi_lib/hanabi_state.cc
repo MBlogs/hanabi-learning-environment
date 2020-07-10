@@ -64,7 +64,7 @@ HanabiState::HanabiDeck::HanabiDeck(const HanabiGame& game)
 }
 
 HanabiCard HanabiState::HanabiDeck::DealCard(std::mt19937* rng) {
-  """MB: DealCard function"""
+  // MB: DealCard function
   if (Empty()) {
     return HanabiCard();
   }
@@ -78,7 +78,7 @@ HanabiCard HanabiState::HanabiDeck::DealCard(std::mt19937* rng) {
 }
 
 HanabiCard HanabiState::HanabiDeck::DealCard(int color, int rank) {
-  """MB: This is a promising option. Check for validity elsewhere"""
+  // MB: This is a promising option. Check for validity elsewhere
   int index = CardToIndex(color, rank);
   if (card_count_[index] <= 0) {
     return HanabiCard();

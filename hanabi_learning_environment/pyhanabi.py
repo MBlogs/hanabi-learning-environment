@@ -566,11 +566,15 @@ class HanabiState(object):
 
   def deal_random_card(self):
     """If cur_player == CHANCE_PLAYER_ID, make a random card-deal move."""
-    lib.StateDealRandomCard(self._state)
-
-  def deal_card(self, card):
-    """Deal a very particular card to the player"""
     lib.StateDealCard(self._state)
+
+  def deal_card(self, color, rank):
+    """MB: if cur_player = CHANCE_PLAYER_ID, make a specific card-deal move"""
+    lib.StateDealCard(self._state)
+
+  def return_card(self, color, rank):
+    """ MB: return card to the deck """
+    # lib StateReturnCard(self._state)
 
   def player_hands(self):
     """Returns a list of all hands, with cards ordered oldest to newest."""
