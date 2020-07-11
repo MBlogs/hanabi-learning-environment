@@ -223,9 +223,11 @@ class HanabiEnv(Environment):
       # (temporarily putting CHANCE_PLAYER_ID to -1 as if they have discarded leading to a draw card)
       action = {'action_type': 'RETURN', 'card_index': 0}
       action = self._build_move(action) #this just gets the move object
+      print("MB: Move built")
       self.state.apply_move(action) #this applies the move object
+      print("MB: Move applied")
       while self.state.cur_player() == pyhanabi.CHANCE_PLAYER_ID:
-          self.state.deal_specific_card('Y',5)
+          self.state.deal_random_card()
 
   def vectorized_observation_shape(self):
     """Returns the shape of the vectorized observation.
@@ -363,17 +365,20 @@ class HanabiEnv(Environment):
 
     last_score = self.state.score()
     # Apply the action to the state.
+    print("MB: Try to apply move")
     self.state.apply_move(action)
+    print("MB: Move applied")
     while self.state.cur_player() == pyhanabi.CHANCE_PLAYER_ID:
       # MB: Could change logic to pick valid cards instead
+      print("MB: Dealing Random card")
       self.state.deal_random_card()
 
     observation = self._make_observation_all_players()
+    print("MB: Made observation all players")
     done = self.state.is_terminal()
     # Reward is score differential. May be large and negative at game end.
     reward = self.state.score() - last_score
     info = {}
-
     return (observation, reward, done, info)
 
   def _make_observation_all_players(self):
@@ -513,7 +518,6 @@ class HanabiEnv(Environment):
         str,
         legal_moves)), "Illegal action: {}. Move should be one of : {}".format(
             move, legal_moves)
-    print("MB: Move built")
     return move
 
 

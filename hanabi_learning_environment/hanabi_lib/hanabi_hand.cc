@@ -95,9 +95,10 @@ void HanabiHand::RemoveFromHand(int card_index,
 }
 
 void HanabiHand::ReturnFromHand(int card_index) {
-  // MB: Retain CardKnowledge, just delete from Hand
+  // MB: Delete from hand (and for now, delete card knowledge too)
   // MB: Adding to deck is handled by ApplyMove in hanabi_state
   cards_.erase(cards_.begin() + card_index);
+  card_knowledge_.erase(card_knowledge_.begin() + card_index);
 }
 
 uint8_t HanabiHand::RevealColor(const int color) {

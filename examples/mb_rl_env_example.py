@@ -50,9 +50,9 @@ class Runner(object):
           observation = observations['player_observations'][agent_id]
           action = agent.act(observation)
           if observation['current_player'] == agent_id:
+            # MB: Try to perform an index 4 card return
             assert action is not None
             current_player_action = action
-            print_state(self)
           else:
             assert action is None
         # Make an environment step.
@@ -60,8 +60,10 @@ class Runner(object):
                                             current_player_action))
         observations, reward, done, unused_info = self.environment.step(
             current_player_action)
-        # MB: Try to perform an index 0 card return
-        self.environment.edit_state({'action_type': 'RETURN', 'card_index': 0})
+        print_state(self)
+        return_action = {}
+        observations, reward, done, unused_info = self.environment.step(
+          current_player_action)
         episode_reward += reward
       # MB: Rewards seems pretty funky. It's zero for all non-perfect games? A: Yes may want to change that
       rewards.append(episode_reward)

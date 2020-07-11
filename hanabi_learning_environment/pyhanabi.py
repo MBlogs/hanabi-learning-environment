@@ -573,9 +573,10 @@ class HanabiState(object):
     """If cur_player == CHANCE_PLAYER_ID, make a random card-deal move."""
     lib.StateDealCard(self._state)
 
-  def deal_card(self, color, rank):
+  def deal_specific_card(self, color, rank):
     """MB: if cur_player = CHANCE_PLAYER_ID, make a specific card-deal move"""
-    lib.StateDealCard(self._state)
+    # Note: This deal does not change card knowledge
+    lib.StateDealSpecificCard(self._state, color, rank)
 
   def return_card(self, color, rank):
     """MB: return card to the deck. Card knowledge is NOT updated or changed though"""

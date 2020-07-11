@@ -346,7 +346,7 @@ int StateCurPlayer(pyhanabi_state_t* state) {
       ->CurPlayer();
 }
 
-void StateDealRandomCard(pyhanabi_state_t* state) {
+void StateDealCard(pyhanabi_state_t* state) {
   REQUIRE(state != nullptr);
   REQUIRE(state->state != nullptr);
   auto hanabi_state =
@@ -354,7 +354,7 @@ void StateDealRandomCard(pyhanabi_state_t* state) {
   hanabi_state->ApplyRandomChance();
 }
 
-void StateDealCard(pyhanabi_state_t* state) {
+void StateDealSpecificCard(pyhanabi_state_t* state, int color, int rank) {
   REQUIRE(state != nullptr);
   REQUIRE(state->state != nullptr);
   auto hanabi_state =
