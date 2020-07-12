@@ -217,19 +217,6 @@ class HanabiEnv(Environment):
     obs["current_player"] = self.state.cur_player()
     return obs
 
-  def edit_state(self, action):
-      """MB: Change cards in a player's hand by building, then applying a move"""
-      print("Player to change hand is: {}".format(self.state.cur_player()))
-      # Experiment: Try to return the card in index 0 to the deck
-      # (temporarily putting CHANCE_PLAYER_ID to -1 as if they have discarded leading to a draw card)
-      action = {'action_type': 'RETURN', 'card_index': 0}
-      action = self._build_move(action) #this just gets the move object
-      # print("MB: Move built")
-      self.state.apply_move(action) #this applies the move object
-      # print("MB: Move applied")
-      while self.state.cur_player() == pyhanabi.CHANCE_PLAYER_ID:
-          self.state.deal_random_card()
-
   def vectorized_observation_shape(self):
     """Returns the shape of the vectorized observation.
 
@@ -246,7 +233,7 @@ class HanabiEnv(Environment):
     """
     return self.game.max_moves()
 
-  def step(self, action):
+  def step(self, action, debugMode=False):
     """Take one step in the game.
 
     Args:
@@ -376,6 +363,12 @@ class HanabiEnv(Environment):
         self.state.deal_random_card()
     observation = self._make_observation_all_players()
     done = self.state.is_terminal()
+
+    # MB: Temp experiment
+    if debugMode:
+      valid_cards_ = self.state.valid_cards(0, 0)
+      print("Valid cards for current agent index 0: {}".format(valid_cards_))
+
     # Reward is score differential. May be large and negative at game end.
     reward = self.state.score() - last_score
     info = {}

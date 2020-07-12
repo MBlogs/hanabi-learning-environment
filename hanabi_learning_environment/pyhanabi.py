@@ -292,6 +292,7 @@ class HanabiMoveType(enum.IntEnum):
   REVEAL_RANK = 4
   DEAL = 5
   RETURN = 6
+  DEAL_SPECIFIC = 7
 
 class HanabiMove(object):
   """Description of an agent move or chance event.
@@ -332,9 +333,16 @@ class HanabiMove(object):
     assert lib.GetDiscardMove(card_index, c_move)
     return HanabiMove(c_move)
 
+  @staticmethod
   def get_return_move(card_index):
     c_move = ffi.new("pyhanabi_move_t*")
     assert lib.GetReturnMove(card_index, c_move)
+    return HanabiMove(c_move)
+
+  @staticmethod
+  def get_deal_specific_move(color, rank):
+    c_move = ffi.new("pyhanabi_move_t*")
+    assert lib.GetDealSpecificMove(color, rank, c_move)
     return HanabiMove(c_move)
 
   @staticmethod
@@ -575,12 +583,9 @@ class HanabiState(object):
 
   def deal_specific_card(self, color, rank):
     """MB: if cur_player = CHANCE_PLAYER_ID, make a specific card-deal move"""
-    # Note: This deal does not change card knowledge
-    lib.StateDealSpecificCard(self._state, color, rank)
-
-  def return_card(self, color, rank):
-    """MB: return card to the deck. Card knowledge is NOT updated or changed though"""
-    # lib StateReturnCard(self._state)
+    # Note: This move currently changes card knowledge. In the actual one, we don't want to change knowledge
+    move = HanabiMove.get_deal_specific_move(color, rank)
+    self.apply_move(move)
 
   def player_hands(self):
     """Returns a list of all hands, with cards ordered oldest to newest."""
@@ -621,6 +626,16 @@ class HanabiState(object):
       moves.append(HanabiMove(c_move))
     lib.DeleteMoveList(c_movelist)
     return moves
+
+  def valid_cards(self, player, card_index):
+    """MB: Return list of HanabiCard that are a valid swap for the one listed"""
+    print("MB: In pyhanabi.HanabiState.valid_cards()")
+    # This is a list of lists of HanabiCardKnowledge objects
+    valid_cards = self.observation(player).card_knowledge()
+    print("Have valid cards. Attempting print")
+    print(valid_cards[0][0].color())
+    print("Printed valid cards")
+    return "placeholder"
 
   def move_is_legal(self, move):
     """Returns true if and only if move is legal for active agent."""
@@ -867,6 +882,7 @@ class HanabiObservation(object):
     Each HanabiCardKnowledge for a card gives the knowledge about the cards
     accumulated over all past reveal actions.
     """
+    # print("MB: Entered card_knowledge")
     card_knowledge_list = []
     for pid in range(self.num_players()):
       player_card_knowledge = []
@@ -876,6 +892,8 @@ class HanabiObservation(object):
         lib.ObsGetHandCardKnowledge(self._observation, pid, i, c_knowledge)
         player_card_knowledge.append(HanabiCardKnowledge(c_knowledge))
       card_knowledge_list.append(player_card_knowledge)
+      #print("MB: Appended knowledge player {}".format(pid))
+    #print("MB: Returned card knowledge")
     return card_knowledge_list
 
   def discard_pile(self):
@@ -980,6 +998,7 @@ class ObservationEncoder(object):
     """Encode the observation as a sequence of bits."""
     c_encoding_str = lib.EncodeObservation(self._encoder,
                                            observation.observation())
+    print("MB: EncodeObservation success")
     encoding_string = encode_ffi_string(c_encoding_str)
     lib.DeleteString(c_encoding_str)
     # Canonical observations are bit strings, so it is ok to encode using a

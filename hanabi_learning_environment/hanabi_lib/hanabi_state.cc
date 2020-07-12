@@ -13,7 +13,7 @@
 // limitations under the License.
 
 #include "hanabi_state.h"
-
+#include <iostream>
 #include <algorithm>
 #include <cassert>
 #include <numeric>
@@ -111,10 +111,15 @@ HanabiState::HanabiState(const HanabiGame* parent_game, int start_player)
       fireworks_(parent_game->NumColors(), 0),
       turns_to_play_(parent_game->NumPlayers()) {}
 
-void HanabiState::AdvanceToNextPlayer() {
-  // MB: how will this work for RETURN?
+void HanabiState::AdvanceToNextPlayer(bool stayOnPlayer) {
+  // MB: RETURN: Sets to CHANCE
+  // MB: DEAL_SPECIFIC: Needs to allow STAYING on current player. hence the boolean option
   if (!deck_.Empty() && PlayerToDeal() >= 0) {
     cur_player_ = kChancePlayerId;
+  } else if (stayOnPlayer == true){
+    //std::cout << "Staying on player";
+    //MB: have to use next_non_chance_player_ to back track to the previous player
+    cur_player_ = (next_non_chance_player_ - 1) % hands_.size();
   } else {
     cur_player_ = next_non_chance_player_;
     next_non_chance_player_ = (cur_player_ + 1) % hands_.size();
@@ -177,6 +182,15 @@ int HanabiState::PlayerToDeal() const {
 bool HanabiState::MoveIsLegal(HanabiMove move) const {
   switch (move.MoveType()) {
     case HanabiMove::kDeal:
+      if (cur_player_ != kChancePlayerId) {
+        return false;
+      }
+      if (deck_.CardCount(move.Color(), move.Rank()) == 0) {
+        return false;
+      }
+      break;
+    //MB: Copy of Deal for now
+    case HanabiMove::kDealSpecific:
       if (cur_player_ != kChancePlayerId) {
         return false;
       }
@@ -256,6 +270,20 @@ void HanabiState::ApplyMove(HanabiMove move) {
             card_knowledge);
       }
       break;
+    case HanabiMove::kDealSpecific: {
+        history.deal_to_player = PlayerToDeal();
+        //MB: WE are resetting CardKnowledge for now
+        HanabiHand::CardKnowledge card_knowledge(ParentGame()->NumColors(),
+                                      ParentGame()->NumRanks());
+        if (parent_game_->ObservationType() == HanabiGame::kSeer){
+          card_knowledge.ApplyIsColorHint(move.Color());
+          card_knowledge.ApplyIsRankHint(move.Rank());
+        }
+        hands_[history.deal_to_player].AddCard(
+            deck_.DealCard(move.Color(), move.Rank()),
+            card_knowledge);
+      }
+      break;
     case HanabiMove::kDiscard:
       history.information_token = IncrementInformationTokens();
       history.color = hands_[cur_player_].Cards()[move.CardIndex()].Color();
@@ -293,7 +321,8 @@ void HanabiState::ApplyMove(HanabiMove move) {
       std::abort();  // Should not be possible.
   }
   move_history_.push_back(history);
-  AdvanceToNextPlayer();
+  //MB WARNING: DealSpecific skips this step.
+  AdvanceToNextPlayer(move.MoveType() == HanabiMove::kDealSpecific);
 }
 
 double HanabiState::ChanceOutcomeProb(HanabiMove move) const {
