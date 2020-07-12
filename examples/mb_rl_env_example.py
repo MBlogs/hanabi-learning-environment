@@ -53,22 +53,29 @@ class Runner(object):
             # MB: Try to perform an index 4 card return
             assert action is not None
             current_player_action = action
+            #print_observation(observation)
           else:
             assert action is None
         # Make an environment step.
         print('Agent: {} action: {}'.format(observation['current_player'],
                                             current_player_action))
-        observations, reward, done, unused_info = self.environment.step(
-            current_player_action)
+
+        observations, reward, done, unused_info = self.environment.step(current_player_action, True)
+        print("After MOVE:")
         print_state(self)
-        return_action = {}
-        observations, reward, done, unused_info = self.environment.step(
-          current_player_action)
         episode_reward += reward
+
+        # MB: Try a return and DealSpecifc Move upfront for the next player
+        #return_action = {'action_type': 'RETURN', 'card_index': 0}
+        #observations, reward, done, unused_info = self.environment.step(return_action)
+        #print("After RETURN:")
+        #print_state(self)
+
       # MB: Rewards seems pretty funky. It's zero for all non-perfect games? A: Yes may want to change that
       rewards.append(episode_reward)
       print('Running episode: %d' % episode)
       print('Max Reward: %.3f' % max(rewards))
+      # ToDo: Get DealSpecific up and running in the morning.
     return rewards
 
 def fireworks_score(fireworks):

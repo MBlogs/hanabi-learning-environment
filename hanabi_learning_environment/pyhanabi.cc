@@ -187,6 +187,13 @@ bool GetReturnMove(int card_index, pyhanabi_move_t* move) {
   return move->move != nullptr;
 }
 
+bool GetDealSpecificMove(int color, int rank, pyhanabi_move_t* move) {
+  REQUIRE(move != nullptr);
+  move->move = new hanabi_learning_env::HanabiMove(
+      hanabi_learning_env::HanabiMove::kDealSpecific, -1, -1, color, rank);
+  return move->move != nullptr;
+}
+
 bool GetRevealColorMove(int target_offset, int color, pyhanabi_move_t* move) {
   REQUIRE(move != nullptr);
   move->move = new hanabi_learning_env::HanabiMove(
@@ -347,14 +354,6 @@ int StateCurPlayer(pyhanabi_state_t* state) {
 }
 
 void StateDealCard(pyhanabi_state_t* state) {
-  REQUIRE(state != nullptr);
-  REQUIRE(state->state != nullptr);
-  auto hanabi_state =
-      reinterpret_cast<hanabi_learning_env::HanabiState*>(state->state);
-  hanabi_state->ApplyRandomChance();
-}
-
-void StateDealSpecificCard(pyhanabi_state_t* state, int color, int rank) {
   REQUIRE(state != nullptr);
   REQUIRE(state->state != nullptr);
   auto hanabi_state =
