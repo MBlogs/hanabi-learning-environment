@@ -15,9 +15,10 @@
 
 from __future__ import absolute_import
 from __future__ import division
+import random
 
 from hanabi_learning_environment import pyhanabi
-from hanabi_learning_environment.pyhanabi import color_char_to_idx
+from hanabi_learning_environment.pyhanabi import color_char_to_idx, HanabiMoveType
 
 MOVE_TYPES = [_.name for _ in pyhanabi.HanabiMoveType]
 
@@ -223,9 +224,9 @@ class HanabiEnv(Environment):
       # (temporarily putting CHANCE_PLAYER_ID to -1 as if they have discarded leading to a draw card)
       action = {'action_type': 'RETURN', 'card_index': 0}
       action = self._build_move(action) #this just gets the move object
-      print("MB: Move built")
+      # print("MB: Move built")
       self.state.apply_move(action) #this applies the move object
-      print("MB: Move applied")
+      # print("MB: Move applied")
       while self.state.cur_player() == pyhanabi.CHANCE_PLAYER_ID:
           self.state.deal_random_card()
 
@@ -364,17 +365,16 @@ class HanabiEnv(Environment):
           action))
 
     last_score = self.state.score()
-    # Apply the action to the state.
-    print("MB: Try to apply move")
+    # Apply the action to the state
     self.state.apply_move(action)
-    print("MB: Move applied")
     while self.state.cur_player() == pyhanabi.CHANCE_PLAYER_ID:
-      # MB: Could change logic to pick valid cards instead
-      print("MB: Dealing Random card")
-      self.state.deal_random_card()
-
+      # MB: Should change this logic to pick valid cards instead
+      if action.type() == pyhanabi.HanabiMoveType.RETURN:
+        print("MB rl_env: Dealing specific card")
+        self.state.deal_specific_card(random.randint(0, 4), 0)
+      else:
+        self.state.deal_random_card()
     observation = self._make_observation_all_players()
-    print("MB: Made observation all players")
     done = self.state.is_terminal()
     # Reward is score differential. May be large and negative at game end.
     reward = self.state.score() - last_score
@@ -432,7 +432,6 @@ class HanabiEnv(Environment):
     obs_dict["discard_pile"] = [
         card.to_dict() for card in observation.discard_pile()
     ]
-
     # Return hints received (MB: Surely this can be improved with previous knowledge?)
     obs_dict["card_knowledge"] = []
     for player_hints in observation.card_knowledge():
@@ -446,11 +445,11 @@ class HanabiEnv(Environment):
         hint_d["rank"] = hint.rank()
         player_hints_as_dicts.append(hint_d)
       obs_dict["card_knowledge"].append(player_hints_as_dicts)
-
+    # MB Try to figure out why this can't be encoded as a valid observation
+    #print("-------------------- ENCODING ----------------------\n {}\n --------------- END ENCODING --------------------".format(observation))
     # ipdb.set_trace()
-    obs_dict["vectorized"] = self.observation_encoder.encode(observation)
+    # obs_dict["vectorized"] = self.observation_encoder.encode(observation)
     obs_dict["pyhanabi"] = observation
-
     return obs_dict
 
   def _build_move(self, action):
@@ -493,7 +492,6 @@ class HanabiEnv(Environment):
       card_index = action["card_index"]
       move = pyhanabi.HanabiMove.get_discard_move(card_index=card_index)
     elif action_type == "RETURN":
-      print("Trying to build RETURN move in rl_env")
       card_index = action["card_index"]
       move = pyhanabi.HanabiMove.get_return_move(card_index=card_index)
     elif action_type == "REVEAL_RANK":
