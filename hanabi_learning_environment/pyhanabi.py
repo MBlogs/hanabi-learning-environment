@@ -706,6 +706,32 @@ class AgentObservationType(enum.IntEnum):
   CARD_KNOWLEDGE = 1
   SEER = 2
 
+class HanabiDeck():
+  """MB: Seperate class handling Python level deck functions for forward models"""
+  # Store deck for easier theoretical manipulation
+  def __init__(self, game):
+    self.num_ranks_ = game.num_ranks()
+    # Card count entries are number 0 - 3, how many of card_index index there i
+    self.card_count_ = []
+    # total count counts number of total cards in deck
+    self.total_count_ = 0
+    self.reset_deck(self, game)
+
+  def card_to_index(self, color, rank):
+    # num_ranks is likely 10 in normal game
+    return color * self.num_ranks_ + rank
+
+  def reset_deck(self, game):
+    for color in range(self.num_colors_):
+      for rank in range(self.num_ranks_):
+        count = game.num_cards(color, rank)
+        self.card_count_[self.card_to_index(color, rank)] = count
+        self.total_count_ += 1
+
+  def valid_cards(self, game):
+    # Input space of possibilities, output HanabiCard that are valid possibilities
+    return None
+
 
 class HanabiGame(object):
   """Game parameters describing a specific instance of Hanabi.
