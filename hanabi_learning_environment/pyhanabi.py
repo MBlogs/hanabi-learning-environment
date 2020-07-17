@@ -531,6 +531,8 @@ class HanabiState(object):
     else:
       self._game = lib.StateParentGame(c_state)
       lib.CopyState(c_state, self._state)
+    # MB: Create deck here too
+    self._deck = HanabiDeck(game)
 
   def copy(self):
     """Returns a copy of the state."""
@@ -627,16 +629,6 @@ class HanabiState(object):
     lib.DeleteMoveList(c_movelist)
     return moves
 
-  def valid_cards(self, player, card_index):
-    """MB: Return list of HanabiCard that are a valid swap for the one listed"""
-    print("MB: In pyhanabi.HanabiState.valid_cards()")
-    # This is a list of lists of HanabiCardKnowledge objects
-    valid_cards = self.observation(player).card_knowledge()
-    print("Have valid cards. Attempting print")
-    print(valid_cards[0][0].color())
-    print("Printed valid cards")
-    return "placeholder"
-
   def move_is_legal(self, move):
     """Returns true if and only if move is legal for active agent."""
     return lib.MoveIsLegal(self._state, move.c_move)
@@ -690,6 +682,113 @@ class HanabiState(object):
       self._state = None
     del self
 
+  def valid_cards(self, player, card_index):
+    """MB: Return list of HanabiCard that are a valid swap for the one questioned"""
+    debug = True
+    if debug: print("MB: In pyhanabi.HanabiState.valid_cards()")
+    self._deck.reset_deck()
+
+    # MB: First run through discard pile
+    for card in self.discard_pile():
+      self._deck.remove_card(card.color(), card.rank())
+
+    if debug: print("MB: valid cards after discard: {}".format(self._deck))
+
+    # MB: Then remove the cards that can be seen
+    for other_player in range(self.num_players()):
+      if other_player == player:
+        continue  # skip over the player that we ask for valid cards for.
+      for card in self.player_hands()[other_player]:
+        self._deck.remove_card(card.color(), card.rank())
+        # if debug: print("MB: card removed {}{}".format(color_idx_to_char(card.color()),card.rank()+1))
+
+    if debug: print("MB: valid cards after cards  : {}".format(self._deck))
+
+    # MB: Finally use card knowledge player has about own hand from hints
+    # ToDo: There is still a bug with card knowledge at the moment.
+    # if debug: print(self.observation(player))
+    card_knowledge = self.observation(player).card_knowledge()[0][card_index]
+    if debug: print("MB: Try to print card_knowledge")
+    if debug: print(card_knowledge)
+    self._deck.remove_by_card_knowledge(card_knowledge)
+
+    # MB: Return list of remaining cards in the deck; the valid options
+    if debug: print("MB: Valid cards for player {} in position: {} are: {}".format(player,card_index,self._deck))
+    return self._deck.return_cards()
+
+
+
+class HanabiDeck(object):
+  """MB: Seperate class handling Python level deck functions for forward models"""
+  # Store deck for easier theoretical manipulation
+
+  def __init__(self, _game):
+    self.debug = True
+    self.num_ranks_ = _game.num_ranks()
+    self.num_colors_ = _game.num_colors()
+    self.num_cards = _game.num_cards
+    self.card_count_ = []  # Card count entries are number 0 - 3, how many of card_index index there are in deck
+    self.total_count_ = 0  # total cards in deck
+    self.reset_deck()
+
+  def card_to_index(self, color, rank):
+    return color * self.num_ranks_ + rank
+
+  def reset_deck(self):
+    self.card_count_ = []
+    self.total_count_ = 0
+    # MB:Iteration is in same format as card_to_index, so fine to append
+    for color in range(self.num_colors_):
+      for rank in range(self.num_ranks_):
+        # MB: Num cards accounts for duplicate numbers for each card
+        count = self.num_cards(color, rank)
+        self.card_count_.append(count)
+        self.total_count_ += 1
+
+  def remove_by_card_knowledge(self, card_knowledge):
+    """MB: Remove all cards from deck that don't fit with the card knowledge"""
+    for color in range(self.num_colors_):
+      for rank in range(self.num_ranks_):
+        if self.debug: print("MB: color_plausible {} returned: {} rank_plausible {} returned: {}"
+                             .format(color,card_knowledge.color_plausible(color),rank, card_knowledge.rank_plausible(rank)))
+        if not (card_knowledge.color_plausible(color) and card_knowledge.rank_plausible(rank)):
+          self.remove_all_card(color, rank)
+
+  def remove_card(self, color, rank):
+    card_index_ = self.card_to_index(color, rank)
+    if self.card_count_[card_index_] <= 0:
+      print("MB: Card color: {}, rank {} not removed as not in deck".format(color, rank))
+      return
+    self.card_count_[card_index_] -= 1
+    self.total_count_ -= 1
+
+  def remove_all_card(self, color, rank):
+    """MB: Removes all instances of particular card index. Silently in current form"""
+    card_index = self.card_to_index(color, rank)
+    while self.card_count_[card_index] > 0:
+      self.remove_card(color, rank)
+
+  def return_cards(self):
+    """MB: Return the deck as HanabiCard objects"""
+    cards = []
+    for color in range(self.num_colors_):
+      for rank in range(self.num_ranks_):
+        card_index = self.card_to_index(color, rank)
+        for _ in range(self.card_count_[card_index]):
+          cards.append(HanabiCard(color, rank))
+    return cards
+
+
+  def is_empty(self):
+    return self.total_count_ == 0
+
+  def __str__(self):
+    deck_string = ""
+    cards = self.return_cards()
+    for card in cards:
+      deck_string += " {}".format(card)
+    return deck_string
+
 
 class AgentObservationType(enum.IntEnum):
   """Possible agent observation types, consistent with hanabi_game.h.
@@ -705,33 +804,6 @@ class AgentObservationType(enum.IntEnum):
   MINIMAL = 0
   CARD_KNOWLEDGE = 1
   SEER = 2
-
-class HanabiDeck():
-  """MB: Seperate class handling Python level deck functions for forward models"""
-  # Store deck for easier theoretical manipulation
-  def __init__(self, game):
-    self.num_ranks_ = game.num_ranks()
-    # Card count entries are number 0 - 3, how many of card_index index there i
-    self.card_count_ = []
-    # total count counts number of total cards in deck
-    self.total_count_ = 0
-    self.reset_deck(self, game)
-
-  def card_to_index(self, color, rank):
-    # num_ranks is likely 10 in normal game
-    return color * self.num_ranks_ + rank
-
-  def reset_deck(self, game):
-    for color in range(self.num_colors_):
-      for rank in range(self.num_ranks_):
-        count = game.num_cards(color, rank)
-        self.card_count_[self.card_to_index(color, rank)] = count
-        self.total_count_ += 1
-
-  def valid_cards(self, game):
-    # Input space of possibilities, output HanabiCard that are valid possibilities
-    return None
-
 
 class HanabiGame(object):
   """Game parameters describing a specific instance of Hanabi.

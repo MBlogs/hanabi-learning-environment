@@ -365,9 +365,10 @@ class HanabiEnv(Environment):
     done = self.state.is_terminal()
 
     # MB: Temp experiment
+    self.print_state()
     if debugMode:
       valid_cards_ = self.state.valid_cards(0, 0)
-      print("Valid cards for current agent index 0: {}".format(valid_cards_))
+      print("Valid cards for current player: {}".format(valid_cards_))
 
     # Reward is score differential. May be large and negative at game end.
     reward = self.state.score() - last_score
@@ -511,6 +512,8 @@ class HanabiEnv(Environment):
             move, legal_moves)
     return move
 
+  def print_state(self):
+    print("------------------ STATE -------------------\n{}\n--------------- END STATE ------------------".format(self.state))
 
 def make(environment_name="Hanabi-Full", num_players=2, pyhanabi_path=None):
   """Make an environment.

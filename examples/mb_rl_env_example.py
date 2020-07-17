@@ -50,10 +50,8 @@ class Runner(object):
           observation = observations['player_observations'][agent_id]
           action = agent.act(observation)
           if observation['current_player'] == agent_id:
-            # MB: Try to perform an index 4 card return
             assert action is not None
             current_player_action = action
-            #print_observation(observation)
           else:
             assert action is None
         # Make an environment step.
@@ -61,8 +59,6 @@ class Runner(object):
                                             current_player_action))
 
         observations, reward, done, unused_info = self.environment.step(current_player_action, True)
-        print("After MOVE:")
-        print_state(self)
         episode_reward += reward
 
         # MB: Try a return and DealSpecifc Move upfront for the next player
@@ -75,7 +71,6 @@ class Runner(object):
       rewards.append(episode_reward)
       print('Running episode: %d' % episode)
       print('Max Reward: %.3f' % max(rewards))
-      # ToDo: Get DealSpecific up and running in the morning.
     return rewards
 
 def fireworks_score(fireworks):
