@@ -367,8 +367,12 @@ class HanabiEnv(Environment):
     # MB: Temp experiment
     self.print_state()
     if debugMode:
-      valid_cards_ = self.state.valid_cards(0, 0)
-      print("Valid cards for current player: {}".format(valid_cards_))
+      player = 0
+      card_index = 0
+      valid_cards_ = self.state.valid_cards(player, card_index)
+      print("Valid cards for player: {}, card position {} are: {}".format(player,card_index,valid_cards_))
+      valid_cards_ = self.state.valid_cards(player+1, card_index)
+      print("Valid cards for player: {}, card position {} are: {}".format(player+1, card_index, valid_cards_))
 
     # Reward is score differential. May be large and negative at game end.
     reward = self.state.score() - last_score

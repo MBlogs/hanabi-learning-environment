@@ -684,7 +684,7 @@ class HanabiState(object):
 
   def valid_cards(self, player, card_index):
     """MB: Return list of HanabiCard that are a valid swap for the one questioned"""
-    debug = True
+    debug = False
     if debug: print("MB: In pyhanabi.HanabiState.valid_cards()")
     self._deck.reset_deck()
 
@@ -705,10 +705,10 @@ class HanabiState(object):
     if debug: print("MB: valid cards after cards  : {}".format(self._deck))
 
     # MB: Finally use card knowledge player has about own hand from hints
-    # ToDo: There is still a bug with card knowledge at the moment.
-    # if debug: print(self.observation(player))
-    card_knowledge = self.observation(player).card_knowledge()[0][card_index]
-    if debug: print("MB: Try to print card_knowledge")
+    # MB: ! If retrieving something via C++ wrapper method need to assign to object first!
+    # MB: Tried below all in one line and it choked
+    temp_observation = self.observation(player)
+    card_knowledge = temp_observation.card_knowledge()[0][card_index]
     if debug: print(card_knowledge)
     self._deck.remove_by_card_knowledge(card_knowledge)
 
@@ -723,7 +723,7 @@ class HanabiDeck(object):
   # Store deck for easier theoretical manipulation
 
   def __init__(self, _game):
-    self.debug = True
+    self.debug = False
     self.num_ranks_ = _game.num_ranks()
     self.num_colors_ = _game.num_colors()
     self.num_cards = _game.num_cards

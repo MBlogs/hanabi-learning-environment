@@ -46,28 +46,23 @@ HanabiHand::CardKnowledge::CardKnowledge(int num_colors, int num_ranks)
 
 std::string HanabiHand::CardKnowledge::ToString() const {
   std::string result;
-  std::cout << "In CardKnowledgeToString";
   result = result + (ColorHinted() ? ColorIndexToChar(Color()) : 'X') +
            (RankHinted() ? RankIndexToChar(Rank()) : 'X') + '|';
   //MB: if it goes over there is a memory leak
-  std::cout << color_.Range();
   assert(color_.Range() <= 8);
-  std::cout << " Passed assertion";
+
   for (int c = 0; c < color_.Range(); ++c) {
 
     if (color_.IsPlausible(c)) {
-      std::cout << color_.Range();
       result += ColorIndexToChar(c);
     }
   }
-  std::cout << " ColorDone";
 
   for (int r = 0; r < rank_.Range(); ++r) {
     if (rank_.IsPlausible(r)) {
       result += RankIndexToChar(r);
     }
   }
-  std::cout << " End";
   return result;
 }
 
