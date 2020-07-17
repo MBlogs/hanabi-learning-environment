@@ -86,6 +86,13 @@ HanabiCard HanabiState::HanabiDeck::DealCard(int color, int rank) {
   assert(card_count_[index] > 0);
   --card_count_[index];
   --total_count_;
+  //std::cout<<"After DealCard count of that card colorrank ";
+  //std::cout<<color;
+  //std::cout<<rank;
+  //std::cout<<" index ";
+  //std::cout<<index;
+  //std::cout<<" was ";
+  //std::cout<<card_count_[index];
   return HanabiCard(IndexToColor(index), IndexToRank(index));
 }
 
@@ -93,8 +100,15 @@ void HanabiState::HanabiDeck::ReturnCard(int color, int rank) {
   // MB: When a card is being Returned from a Hand to the deck
   // Do we need to check for if it's valid to return the card? Probs not.
   int index = CardToIndex(color, rank);
-  ++card_count_[index];
-  ++total_count_;
+  card_count_[index] += 1;
+  total_count_ += 1;
+  //std::cout<<"After ReturnCard, count of that card colorrank ";
+  //std::cout<<color;
+  //std::cout<<rank;
+  //std::cout<<" index ";
+  //std::cout<<index;
+  //std::cout<<" was ";
+  //std::cout<<card_count_[index];
 }
 
 HanabiState::HanabiState(const HanabiGame* parent_game, int start_player)
@@ -195,6 +209,7 @@ bool HanabiState::MoveIsLegal(HanabiMove move) const {
         return false;
       }
       if (deck_.CardCount(move.Color(), move.Rank()) == 0) {
+        std::cout<<"None of the card in deck";
         return false;
       }
       break;
@@ -272,16 +287,9 @@ void HanabiState::ApplyMove(HanabiMove move) {
       break;
     case HanabiMove::kDealSpecific: {
         history.deal_to_player = PlayerToDeal();
-        //MB: WE are resetting CardKnowledge for now
-        HanabiHand::CardKnowledge card_knowledge(ParentGame()->NumColors(),
-                                      ParentGame()->NumRanks());
-        if (parent_game_->ObservationType() == HanabiGame::kSeer){
-          card_knowledge.ApplyIsColorHint(move.Color());
-          card_knowledge.ApplyIsRankHint(move.Rank());
-        }
-        hands_[history.deal_to_player].AddCard(
-            deck_.DealCard(move.Color(), move.Rank()),
-            card_knowledge);
+        //MB: Need to make sure DealSpecific enforces card_index passing
+        hands_[history.deal_to_player].InsertCard(
+            deck_.DealCard(move.Color(), move.Rank()), move.CardIndex());
       }
       break;
     case HanabiMove::kDiscard:
@@ -292,8 +300,11 @@ void HanabiState::ApplyMove(HanabiMove move) {
       break;
     case HanabiMove::kReturn:
       //MB: Hopefully we can just silently return from hand to deck. Note: Knowledge is NOT updated
+      history.color = hands_[cur_player_].Cards()[move.CardIndex()].Color();
+      history.rank = hands_[cur_player_].Cards()[move.CardIndex()].Rank();
+      deck_.ReturnCard(hands_[cur_player_].Cards()[move.CardIndex()].Color()
+                      ,hands_[cur_player_].Cards()[move.CardIndex()].Rank());
       hands_[cur_player_].ReturnFromHand(move.CardIndex());
-      deck_.ReturnCard(hands_[cur_player_].Cards()[move.CardIndex()].Color(),hands_[cur_player_].Cards()[move.CardIndex()].Rank());
       break;
     case HanabiMove::kPlay:
       history.color = hands_[cur_player_].Cards()[move.CardIndex()].Color();

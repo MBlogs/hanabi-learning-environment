@@ -20,8 +20,6 @@ from hanabi_learning_environment import rl_env
 from hanabi_learning_environment.agents.random_agent import RandomAgent
 from hanabi_learning_environment.agents.simple_agent import SimpleAgent
 from hanabi_learning_environment.agents.mcts.mcts_agent import MCTSAgent
-from hanabi_learning_environment.agents.mcts.ris_mcts_agent import RISMCTSAgent
-# from hanabi_learning_environment.agents.ref_mcts.wang.wang_mcts import MCAgent
 
 AGENT_CLASSES = {'SimpleAgent': SimpleAgent, 'RandomAgent': RandomAgent, 'MCTSAgent': MCTSAgent}
 
@@ -41,7 +39,6 @@ class Runner(object):
     for episode in range(flags['num_episodes']):
       observations = self.environment.reset()
       # MB: Allow parsing of different Agents. N
-      # TODO: Assumes config is the same for all agents. Will need to be different for config.
       agents = [agent_class(self.agent_config) for agent_class in self.agent_classes]
       done = False
       episode_reward = 0
@@ -55,64 +52,28 @@ class Runner(object):
           else:
             assert action is None
         # Make an environment step.
-        print('Agent: {} action: {}'.format(observation['current_player'],
-                                            current_player_action))
+        # print('Agent: {} action: {}'.format(observation['current_player'],current_player_action))
 
         observations, reward, done, unused_info = self.environment.step(current_player_action)
         episode_reward += reward
 
         # MB: Try a return and DealSpecifc Move upfront for the next player
-        print("Before RETURN:")
-        print_state(self)
+        # print_state(self)
         return_action = {'action_type': 'RETURN', 'card_index': 0}
-        observations, reward, done, unused_info = self.environment.step(return_action, True)
-        print("After RETURN:")
-        print_state(self)
+        observations, reward, done, unused_info = self.environment.step(return_action)
 
       # MB: Rewards seems pretty funky. It's zero for all non-perfect games? A: Yes may want to change that
       rewards.append(episode_reward)
-      print('Running episode: %d' % episode)
-      print('Max Reward: %.3f' % max(rewards))
+      # print('Running episode: %d' % episode)
+      print('Episode {}, Score: {}'.format(episode, self.environment.fireworks_score()))
     return rewards
 
-def fireworks_score(fireworks):
-  '''Utility function to return score'''
-  score = 0
-  for f, s in fireworks.items():
-    score += s
-  return score
-
-def print_state(self):
-  self.environment.print_state()
-
-def print_observation(observation):
-  ''' MB: Utility function. Print important information about the state'''
-  # TODO: An observation in the rl_env is lacking the full card knowledge from the state
-  print("\n")
-  print('------- Observation from Player:{} -------'.format(observation['current_player']))
-  print("Observation keys: {}".format(observation.keys()))
-  print("Number of players: {}".format(observation['num_players']))
-  print("Current Player: {}".format(observation['current_player']))
-  print("Current Player Offset: {}".format(observation['current_player_offset']))
-  print("Information Tokens: {}".format(observation['information_tokens']))
-  print("Life Tokens {}".format(observation['life_tokens']))
-  print("Deck size: {}".format(observation['deck_size']))
-  print("Discard Pile: {}".format(observation['discard_pile']))
-  print("Fireworks: {}".format(observation['fireworks']))
-  print("Fireworks Score: {}".format(fireworks_score(observation['fireworks'])))
-  print("Legal Moves: {}".format(observation['legal_moves']))
-  print("Observed Hands: {}".format(observation['observed_hands']))
-  print("Card Knowledge: {}".format(observation['card_knowledge']))
-  print("Pyhanabi is the direct HanabiObservation class and has additional functions like")
-  print(".card_knowledge() (list of HanabiCardKnowledge objects):{}".format(observation['pyhanabi'].card_knowledge()))
-  print(".observed_hands() {}".format(observation['pyhanabi'].observed_hands()))
-  print(".card_playable_on_fireworks(card,value)".format(observation['pyhanabi']))
-  print("\n")
-
+  def print_state(self):
+    self.environment.print_state()
 
 if __name__ == "__main__":
   # MB: agent_class changed to agent_classes
-  flags = {'players': 3, 'num_episodes': 1, 'agent_classes': ['SimpleAgent', 'SimpleAgent', 'SimpleAgent']}
+  flags = {'players': 3, 'num_episodes': 1000, 'agent_classes': ['SimpleAgent', 'SimpleAgent', 'SimpleAgent']}
   options, arguments = getopt.getopt(sys.argv[1:], '',
                                      ['players=',
                                       'num_episodes=',

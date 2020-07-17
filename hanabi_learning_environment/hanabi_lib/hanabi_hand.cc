@@ -89,7 +89,13 @@ void HanabiHand::AddCard(HanabiCard card,
   card_knowledge_.push_back(initial_knowledge);
 }
 
-//MB: When Removing for a Return, use this method or seperate?
+void HanabiHand::InsertCard(HanabiCard card,int card_index) {
+  // MB: No reset of card knowledge and insertion of card into hand
+  //MB: The choise of Insert
+  REQUIRE(card.IsValid());
+  cards_.insert(cards_.begin()+card_index,card);
+}
+
 void HanabiHand::RemoveFromHand(int card_index,
                                 std::vector<HanabiCard>* discard_pile) {
   if (discard_pile != nullptr) {
@@ -100,10 +106,10 @@ void HanabiHand::RemoveFromHand(int card_index,
 }
 
 void HanabiHand::ReturnFromHand(int card_index) {
-  // MB: Delete from hand (and for now, delete card knowledge too)
+  // MB: Delete from hand (and try to not delete card knowledge too)
   // MB: Adding to deck is handled by ApplyMove in hanabi_state
+  // MB: cards_ is vector<HanabiCard> , card_knowledge_ is vector<HanabiKnowledge>
   cards_.erase(cards_.begin() + card_index);
-  card_knowledge_.erase(card_knowledge_.begin() + card_index);
 }
 
 uint8_t HanabiHand::RevealColor(const int color) {

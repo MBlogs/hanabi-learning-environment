@@ -340,9 +340,9 @@ class HanabiMove(object):
     return HanabiMove(c_move)
 
   @staticmethod
-  def get_deal_specific_move(color, rank):
+  def get_deal_specific_move(color, rank, card_index):
     c_move = ffi.new("pyhanabi_move_t*")
-    assert lib.GetDealSpecificMove(color, rank, c_move)
+    assert lib.GetDealSpecificMove(color, rank,card_index, c_move)
     return HanabiMove(c_move)
 
   @staticmethod
@@ -579,14 +579,23 @@ class HanabiState(object):
       firework_list.append(lib.StateFireworks(self._state, c))
     return firework_list
 
+  def fireworks_score(self):
+    """MB: Utility function. Return the combined fireworks score"""
+    score=0
+    fireworks = self.fireworks()
+    for f in fireworks:
+      score += f
+    return score
+
   def deal_random_card(self):
     """If cur_player == CHANCE_PLAYER_ID, make a random card-deal move."""
     lib.StateDealCard(self._state)
 
-  def deal_specific_card(self, color, rank):
+  def deal_specific_card(self, color, rank, card_index):
     """MB: if cur_player = CHANCE_PLAYER_ID, make a specific card-deal move"""
     # Note: This move currently changes card knowledge. In the actual one, we don't want to change knowledge
-    move = HanabiMove.get_deal_specific_move(color, rank)
+    assert self.cur_player() == CHANCE_PLAYER_ID
+    move = HanabiMove.get_deal_specific_move(color, rank, card_index)
     self.apply_move(move)
 
   def player_hands(self):
@@ -685,7 +694,7 @@ class HanabiState(object):
   def valid_cards(self, player, card_index):
     """MB: Return list of HanabiCard that are a valid swap for the one questioned"""
     debug = False
-    if debug: print("MB: In pyhanabi.HanabiState.valid_cards()")
+    if debug: print("MB:  Replacing {}".format(self.player_hands()[player][card_index]))
     self._deck.reset_deck()
 
     # MB: First run through discard pile
@@ -696,20 +705,25 @@ class HanabiState(object):
 
     # MB: Then remove the cards that can be seen
     for other_player in range(self.num_players()):
-      if other_player == player:
-        continue  # skip over the player that we ask for valid cards for.
-      for card in self.player_hands()[other_player]:
+      for card_index_i in range(len(self.player_hands()[other_player])):
+        # MB: For now, also peek at rest of own hand and remove all those not at card_index
+        if other_player == player and card_index_i == card_index:
+          continue  # skip over the player that we ask for valid cards for.
+        card = self.player_hands()[other_player][card_index_i]
         self._deck.remove_card(card.color(), card.rank())
         # if debug: print("MB: card removed {}{}".format(color_idx_to_char(card.color()),card.rank()+1))
 
     if debug: print("MB: valid cards after cards  : {}".format(self._deck))
+
+    # MB: Then remove cards that are making up fireworks
+    self._deck.remove_by_fireworks(self.fireworks())
+    if debug: print("MB: valid cards after fireworks  : {}".format(self._deck))
 
     # MB: Finally use card knowledge player has about own hand from hints
     # MB: ! If retrieving something via C++ wrapper method need to assign to object first!
     # MB: Tried below all in one line and it choked
     temp_observation = self.observation(player)
     card_knowledge = temp_observation.card_knowledge()[0][card_index]
-    if debug: print(card_knowledge)
     self._deck.remove_by_card_knowledge(card_knowledge)
 
     # MB: Return list of remaining cards in the deck; the valid options
@@ -731,28 +745,29 @@ class HanabiDeck(object):
     self.total_count_ = 0  # total cards in deck
     self.reset_deck()
 
-  def card_to_index(self, color, rank):
-    return color * self.num_ranks_ + rank
-
   def reset_deck(self):
     self.card_count_ = []
     self.total_count_ = 0
-    # MB:Iteration is in same format as card_to_index, so fine to append
+    # MB:Iteration is in same format as card_to_index, so fine to append (ORRR ARE WEEEE?)
     for color in range(self.num_colors_):
       for rank in range(self.num_ranks_):
         # MB: Num cards accounts for duplicate numbers for each card
         count = self.num_cards(color, rank)
         self.card_count_.append(count)
-        self.total_count_ += 1
+        self.total_count_ += count
 
   def remove_by_card_knowledge(self, card_knowledge):
     """MB: Remove all cards from deck that don't fit with the card knowledge"""
     for color in range(self.num_colors_):
       for rank in range(self.num_ranks_):
-        if self.debug: print("MB: color_plausible {} returned: {} rank_plausible {} returned: {}"
-                             .format(color,card_knowledge.color_plausible(color),rank, card_knowledge.rank_plausible(rank)))
         if not (card_knowledge.color_plausible(color) and card_knowledge.rank_plausible(rank)):
           self.remove_all_card(color, rank)
+
+  def remove_by_fireworks(self, fireworks):
+    """MB: Remove all cards from deck that are making up fireworks"""
+    for color in range(self.num_colors_):
+        for rank in range(fireworks[color]):
+          self.remove_card(color,rank)
 
   def remove_card(self, color, rank):
     card_index_ = self.card_to_index(color, rank)
@@ -779,9 +794,14 @@ class HanabiDeck(object):
           cards.append(HanabiCard(color, rank))
     return cards
 
+  def card_to_index(self, color, rank):
+    return color * self.num_ranks_ + rank
 
   def is_empty(self):
     return self.total_count_ == 0
+
+  def size(self):
+    return
 
   def __str__(self):
     deck_string = ""

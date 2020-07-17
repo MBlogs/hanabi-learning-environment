@@ -102,6 +102,8 @@ class HanabiHand {
     return card_knowledge_;
   }
   void AddCard(HanabiCard card, const CardKnowledge& initial_knowledge);
+  //MB: Insert card at specific position
+  void InsertCard(HanabiCard card, int card_index);
   // Remove card_index card from hand. Put in discard_pile if not nullptr
   // (pushes the card to the back of the discard_pile vector).
   void RemoveFromHand(int card_index, std::vector<HanabiCard>* discard_pile);

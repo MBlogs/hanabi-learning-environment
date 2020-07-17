@@ -357,15 +357,16 @@ class HanabiEnv(Environment):
     if action.type() == pyhanabi.HanabiMoveType.RETURN:
       valid_cards = self.state.valid_cards(self.state.cur_player(), action.card_index())
       replacement_card = random.choice(valid_cards)
-      if debugMode: print("MB: chose card {}".format(replacement_card))
+      if debugMode: print("MB: return card {}".format(self.state.player_hands()[self.state.cur_player()][action.card_index()]))
+      if debugMode: print("MB: replace with card {}".format(replacement_card))
 
     # Apply the action to the state
     self.state.apply_move(action)
 
     while self.state.cur_player() == pyhanabi.CHANCE_PLAYER_ID:
       if action.type() == pyhanabi.HanabiMoveType.RETURN:
-        if debugMode: print("MB rl_env: Dealing specific card")
-        self.state.deal_specific_card(replacement_card.color(), replacement_card.rank())
+        if debugMode: print("MB: Dealing specific card: {}".format(replacement_card))
+        self.state.deal_specific_card(replacement_card.color(), replacement_card.rank(), action.card_index())
       else:
         self.state.deal_random_card()
     observation = self._make_observation_all_players()
@@ -374,6 +375,9 @@ class HanabiEnv(Environment):
     reward = self.state.score() - last_score
     info = {}
     return (observation, reward, done, info)
+
+  def fireworks_score(self):
+    return self.state.fireworks_score()
 
   def _make_observation_all_players(self):
     """Make observation for all players.
