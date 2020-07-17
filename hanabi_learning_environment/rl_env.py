@@ -352,28 +352,24 @@ class HanabiEnv(Environment):
           action))
 
     last_score = self.state.score()
+
+    # RETURN considerations
+    if action.type() == pyhanabi.HanabiMoveType.RETURN:
+      valid_cards = self.state.valid_cards(self.state.cur_player(), action.card_index())
+      replacement_card = random.choice(valid_cards)
+      if debugMode: print("MB: chose card {}".format(replacement_card))
+
     # Apply the action to the state
     self.state.apply_move(action)
+
     while self.state.cur_player() == pyhanabi.CHANCE_PLAYER_ID:
-      # MB: Should change this logic to pick valid cards instead
       if action.type() == pyhanabi.HanabiMoveType.RETURN:
-        print("MB rl_env: Dealing specific card")
-        self.state.deal_specific_card(random.randint(0, 4), 0)
+        if debugMode: print("MB rl_env: Dealing specific card")
+        self.state.deal_specific_card(replacement_card.color(), replacement_card.rank())
       else:
         self.state.deal_random_card()
     observation = self._make_observation_all_players()
     done = self.state.is_terminal()
-
-    # MB: Temp experiment
-    self.print_state()
-    if debugMode:
-      player = 0
-      card_index = 0
-      valid_cards_ = self.state.valid_cards(player, card_index)
-      print("Valid cards for player: {}, card position {} are: {}".format(player,card_index,valid_cards_))
-      valid_cards_ = self.state.valid_cards(player+1, card_index)
-      print("Valid cards for player: {}, card position {} are: {}".format(player+1, card_index, valid_cards_))
-
     # Reward is score differential. May be large and negative at game end.
     reward = self.state.score() - last_score
     info = {}

@@ -757,7 +757,8 @@ class HanabiDeck(object):
   def remove_card(self, color, rank):
     card_index_ = self.card_to_index(color, rank)
     if self.card_count_[card_index_] <= 0:
-      print("MB: Card color: {}, rank {} not removed as not in deck".format(color, rank))
+      print("MB: Warning! pyhanabi.HanabiDeck.remove_card: Card color: {}, rank {} not removed as not in deck."
+            " HanabiState.valid_cards likely failed.".format(color, rank))
       return
     self.card_count_[card_index_] -= 1
     self.total_count_ -= 1

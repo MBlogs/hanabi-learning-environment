@@ -58,14 +58,16 @@ class Runner(object):
         print('Agent: {} action: {}'.format(observation['current_player'],
                                             current_player_action))
 
-        observations, reward, done, unused_info = self.environment.step(current_player_action, True)
+        observations, reward, done, unused_info = self.environment.step(current_player_action)
         episode_reward += reward
 
         # MB: Try a return and DealSpecifc Move upfront for the next player
-        #return_action = {'action_type': 'RETURN', 'card_index': 0}
-        #observations, reward, done, unused_info = self.environment.step(return_action)
-        #print("After RETURN:")
-        #print_state(self)
+        print("Before RETURN:")
+        print_state(self)
+        return_action = {'action_type': 'RETURN', 'card_index': 0}
+        observations, reward, done, unused_info = self.environment.step(return_action, True)
+        print("After RETURN:")
+        print_state(self)
 
       # MB: Rewards seems pretty funky. It's zero for all non-perfect games? A: Yes may want to change that
       rewards.append(episode_reward)
@@ -81,7 +83,7 @@ def fireworks_score(fireworks):
   return score
 
 def print_state(self):
-  print("-----------------------------------------------\n{}".format(self.environment.state))
+  self.environment.print_state()
 
 def print_observation(observation):
   ''' MB: Utility function. Print important information about the state'''
