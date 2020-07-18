@@ -160,6 +160,7 @@ class HanabiEnv(Environment):
 
     # Apply the action to the state
     self.state.apply_move(action)
+    if debug: print("MB: Applied the action")
     done = self.state.is_terminal()
 
     # MB: Deals with standard scenario if player need another card
@@ -170,9 +171,11 @@ class HanabiEnv(Environment):
       else:
         if debug: print("MB: Dealing random card")
         self.state.deal_random_card()
+    if debug: print("MB: Passed dealing of the card")
 
-    # MB: Now it is on next player, need to replace their hand before making observations
+    # MB: Now it is on next player. Should be able to replace fine; will be precisely their own.
     self.state.replace_hand(self.state.cur_player())
+    if debug: print("MB: Player {} replaced hand".format(self.state.cur_player()))
     if debug: self.print_state()
     # MB: Now make observation, as it includes the new hand now
     observation = self._make_observation_all_players()

@@ -694,36 +694,32 @@ class HanabiState(object):
 
   def valid_cards(self, player, card_index):
     """MB: Return list of HanabiCard that are a valid swap for the one questioned"""
-    debug = False
+    # Note: We know the state. For efficency and simplicity a direct GetDeck should have been implemented.
+    # Then the only check needed is the card_knowledge check
+    debug = True
     if debug: print("MB:  Replacing {}".format(self.player_hands()[player][card_index]))
     self._deck.reset_deck()
 
     # MB: First run through discard pile
     for card in self.discard_pile():
       self._deck.remove_card(card.color(), card.rank())
-
     if debug: print("MB: valid cards after discard: {}".format(self._deck))
 
     # MB: Then remove the cards that can be seen
-    for other_player in range(self.num_players()):
-      for card_index_i in range(len(self.player_hands()[other_player])):
-        # MB: For now, also peek at rest of own hand and remove all those not at card_index
-        if other_player == player and card_index_i == card_index:
-          continue  # skip over the player's card that we ask for valid cards for.
-        card = self.player_hands()[other_player][card_index_i]
-        self._deck.remove_card(card.color(), card.rank())
-        # if debug: print("MB: card removed {}{}".format(color_idx_to_char(card.color()),card.rank()+1))
-
-    if debug: print("MB: valid cards after cards  : {}".format(self._deck))
+    self._deck.remove_by_hands(player, card_index, self.player_hands())
+    if debug: print("MB: valid cards after cards: {}".format(self._deck))
 
     # MB: Then remove cards that are making up fireworks
     self._deck.remove_by_fireworks(self.fireworks())
-    if debug: print("MB: valid cards after fireworks  : {}".format(self._deck))
+    if debug: print("MB: valid cards after fireworks: {}".format(self._deck))
 
     # MB: Finally use card knowledge player has about own hand from hints
     # MB: ! If retrieving something via C++ wrapper method need to assign to object first!
     temp_observation = self.observation(player)
+    if debug: print("MB: valid cards attempting to access card_index {}".format(card_index))
+    if debug: print(temp_observation)
     card_knowledge = temp_observation.card_knowledge()[0][card_index]
+    if debug: print("MB: valid cards retrieved card_knowledge")
     self._deck.remove_by_card_knowledge(card_knowledge)
 
     # MB: Return list of remaining cards in the deck; the valid options
@@ -735,20 +731,19 @@ class HanabiState(object):
 
   def replace_hand(self, player):
     """Redeterminise a player's hand based on valid permuation"""
-    debug = False
+    debug = True
     assert player == self.cur_player()
-    if debug: print("MB: cur_player() before replacing hand {}".format(self.cur_player()))
     for card_index in range(len(self.player_hands()[player])):
       # MB: There is a possibility when redeterminising that the hand ends up no longer valid
       valid_card = self.valid_card(player, card_index)
+      if debug: print("MB: replace_hand passed valid_cards")
       assert valid_card is not None # MB: This is where it could slip up; intra-hand conflict
       return_move = HanabiMove.get_return_move(card_index=card_index)
       self.apply_move(return_move)
-      if debug: print("MB: cur_player() before deal move {}".format(self.cur_player()))
+      if debug: print("MB: replace_hand passed return move")
       deal_specific_move = HanabiMove.get_deal_specific_move(valid_card.color(), valid_card.rank(), card_index)
       self.apply_move(deal_specific_move)
-      if debug: print("MB: cur_player() after deal move {}".format(self.cur_player()))
-    if debug: print("MB: cur_player() after replacing hand {}".format(self.cur_player()))
+      if debug: print("MB: replace_hand passed deal specific move")
 
 
 class HanabiDeck(object):
@@ -782,11 +777,20 @@ class HanabiDeck(object):
         if not (card_knowledge.color_plausible(color) and card_knowledge.rank_plausible(rank)):
           self.remove_all_card(color, rank)
 
+  def remove_by_hands(self, player, card_index, hands):
+    for other_player in range(len(hands)):
+      for card_index_i in range(len(hands[other_player])):
+        # MB: For now, also peek at rest of own hand and remove all those not at card_index
+        if other_player == player and card_index_i == card_index:
+          continue  # skip over the player's card that we ask for valid cards for.
+        card = hands[other_player][card_index_i]
+        self.remove_card(card.color(), card.rank())
+
   def remove_by_fireworks(self, fireworks):
     """MB: Remove all cards from deck that are making up fireworks"""
     for color in range(self.num_colors_):
         for rank in range(fireworks[color]):
-          self.remove_card(color,rank)
+          self.remove_card(color, rank)
 
   def remove_card(self, color, rank):
     card_index_ = self.card_to_index(color, rank)

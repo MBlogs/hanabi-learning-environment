@@ -19,9 +19,9 @@ import getopt
 from hanabi_learning_environment import rl_env
 from hanabi_learning_environment.agents.random_agent import RandomAgent
 from hanabi_learning_environment.agents.simple_agent import SimpleAgent
-from hanabi_learning_environment.agents.mcts.mcts_agent import MCTSAgent
+from hanabi_learning_environment.agents.rule_based_agent import RuleBasedAgent
 
-AGENT_CLASSES = {'SimpleAgent': SimpleAgent, 'RandomAgent': RandomAgent, 'MCTSAgent': MCTSAgent}
+AGENT_CLASSES = {'SimpleAgent': SimpleAgent, 'RandomAgent': RandomAgent, 'RuleBasedAgent':RuleBasedAgent}
 
 class Runner(object):
   """Runner class."""
@@ -73,7 +73,7 @@ class Runner(object):
 
 if __name__ == "__main__":
   # MB: agent_class changed to agent_classes
-  flags = {'players': 3, 'num_episodes': 100, 'agent_classes': ['SimpleAgent', 'SimpleAgent', 'SimpleAgent']}
+  flags = {'players': 3, 'num_episodes': 100, 'agent_classes': ['RuleBasedAgent', 'RuleBasedAgent', 'RuleBasedAgent']}
   options, arguments = getopt.getopt(sys.argv[1:], '',
                                      ['players=',
                                       'num_episodes=',
