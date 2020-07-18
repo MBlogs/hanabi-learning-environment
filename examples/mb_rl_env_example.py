@@ -57,10 +57,10 @@ class Runner(object):
         observations, reward, done, unused_info = self.environment.step(current_player_action)
         episode_reward += reward
 
-        # MB: Try a return and DealSpecifc Move upfront for the next player
+        # MB: Try a return and DealSpecifc Move upfront for the next player (note this is now in rl_env.Step()
         # print_state(self)
-        return_action = {'action_type': 'RETURN', 'card_index': 0}
-        observations, reward, done, unused_info = self.environment.step(return_action)
+        # return_action = {'action_type': 'RETURN', 'card_index': 0}
+        # observations, reward, done, unused_info = self.environment.step(return_action)
 
       # MB: Rewards seems pretty funky. It's zero for all non-perfect games? A: Yes may want to change that
       rewards.append(episode_reward)
@@ -73,7 +73,7 @@ class Runner(object):
 
 if __name__ == "__main__":
   # MB: agent_class changed to agent_classes
-  flags = {'players': 3, 'num_episodes': 1000, 'agent_classes': ['SimpleAgent', 'SimpleAgent', 'SimpleAgent']}
+  flags = {'players': 3, 'num_episodes': 100, 'agent_classes': ['SimpleAgent', 'SimpleAgent', 'SimpleAgent']}
   options, arguments = getopt.getopt(sys.argv[1:], '',
                                      ['players=',
                                       'num_episodes=',

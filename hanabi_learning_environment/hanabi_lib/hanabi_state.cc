@@ -128,12 +128,17 @@ HanabiState::HanabiState(const HanabiGame* parent_game, int start_player)
 void HanabiState::AdvanceToNextPlayer(bool stayOnPlayer) {
   // MB: RETURN: Sets to CHANCE
   // MB: DEAL_SPECIFIC: Needs to allow STAYING on current player. hence the boolean option
+  //std::cout<<"Current player initially: ";
+  //std::cout<<cur_player_;
+  //std::cout<<"Next non chance player initially: ";
+  //std::cout<<next_non_chance_player_;
+  //std::cout<<"\n";
+
   if (!deck_.Empty() && PlayerToDeal() >= 0) {
     cur_player_ = kChancePlayerId;
   } else if (stayOnPlayer == true){
-    //std::cout << "Staying on player";
-    //MB: have to use next_non_chance_player_ to back track to the previous player
-    cur_player_ = (next_non_chance_player_ - 1) % hands_.size();
+    //MB: Expression neccesary to ensure modulo wraps -1 > 2 (C++ % implementation)
+    cur_player_ = ((next_non_chance_player_-1) + hands_.size()) % hands_.size();
   } else {
     cur_player_ = next_non_chance_player_;
     next_non_chance_player_ = (cur_player_ + 1) % hands_.size();
@@ -209,7 +214,11 @@ bool HanabiState::MoveIsLegal(HanabiMove move) const {
         return false;
       }
       if (deck_.CardCount(move.Color(), move.Rank()) == 0) {
-        std::cout<<"None of the card in deck";
+        std::cout<<"MB Error: Card color ";
+        std::cout<<move.Color();
+        std::cout<<" rank ";
+        std::cout<<move.Rank();
+        std::cout<<" tried to be dealt specifically but it's not in core deck";
         return false;
       }
       break;
@@ -268,7 +277,7 @@ void HanabiState::ApplyMove(HanabiMove move) {
   if (deck_.Empty()) {
     --turns_to_play_;
   }
-  // MB: Do we really want a RETURN move to add to history? Might have to deal with this in history
+  // MB: Do we really want a RETURN or DEALSPECFIC move to add to history? Might have to deal with this in history
   HanabiHistoryItem history(move);
   history.player = cur_player_;
   switch (move.MoveType()) {

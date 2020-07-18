@@ -109,105 +109,7 @@ class HanabiEnv(Environment):
     self.players = self.game.num_players()
 
   def reset(self):
-    r"""Resets the environment for a new game.
-
-    Returns:
-      observation: dict, containing the full observation about the game at the
-        current step. *WARNING* This observation contains all the hands of the
-        players and should not be passed to the agents.
-        An example observation:
-        {'current_player': 0,
-         'player_observations': [{'current_player': 0,
-                                  'current_player_offset': 0,
-                                  'deck_size': 40,
-                                  'discard_pile': [],
-                                  'fireworks': {'B': 0,
-                                                'G': 0,
-                                                'R': 0,
-                                                'W': 0,
-                                                'Y': 0},
-                                  'information_tokens': 8,
-                                  'legal_moves': [{'action_type': 'PLAY',
-                                                   'card_index': 0},
-                                                  {'action_type': 'PLAY',
-                                                   'card_index': 1},
-                                                  {'action_type': 'PLAY',
-                                                   'card_index': 2},
-                                                  {'action_type': 'PLAY',
-                                                   'card_index': 3},
-                                                  {'action_type': 'PLAY',
-                                                   'card_index': 4},
-                                                  {'action_type':
-                                                  'REVEAL_COLOR',
-                                                   'color': 'R',
-                                                   'target_offset': 1},
-                                                  {'action_type':
-                                                  'REVEAL_COLOR',
-                                                   'color': 'G',
-                                                   'target_offset': 1},
-                                                  {'action_type':
-                                                  'REVEAL_COLOR',
-                                                   'color': 'B',
-                                                   'target_offset': 1},
-                                                  {'action_type': 'REVEAL_RANK',
-                                                   'rank': 0,
-                                                   'target_offset': 1},
-                                                  {'action_type': 'REVEAL_RANK',
-                                                   'rank': 1,
-                                                   'target_offset': 1},
-                                                  {'action_type': 'REVEAL_RANK',
-                                                   'rank': 2,
-                                                   'target_offset': 1}],
-                                  'life_tokens': 3,
-                                  'observed_hands': [[{'color': None, 'rank':
-                                  -1},
-                                                      {'color': None, 'rank':
-                                                      -1},
-                                                      {'color': None, 'rank':
-                                                      -1},
-                                                      {'color': None, 'rank':
-                                                      -1},
-                                                      {'color': None, 'rank':
-                                                      -1}],
-                                                     [{'color': 'G', 'rank': 2},
-                                                      {'color': 'R', 'rank': 0},
-                                                      {'color': 'R', 'rank': 1},
-                                                      {'color': 'B', 'rank': 0},
-                                                      {'color': 'R', 'rank':
-                                                      1}]],
-                                  'num_players': 2,
-                                  'vectorized': [ 0, 0, 1, ... ]},
-                                 {'current_player': 0,
-                                  'current_player_offset': 1,
-                                  'deck_size': 40,
-                                  'discard_pile': [],
-                                  'fireworks': {'B': 0,
-                                                'G': 0,
-                                                'R': 0,
-                                                'W': 0,
-                                                'Y': 0},
-                                  'information_tokens': 8,
-                                  'legal_moves': [],
-                                  'life_tokens': 3,
-                                  'observed_hands': [[{'color': None, 'rank':
-                                  -1},
-                                                      {'color': None, 'rank':
-                                                      -1},
-                                                      {'color': None, 'rank':
-                                                      -1},
-                                                      {'color': None, 'rank':
-                                                      -1},
-                                                      {'color': None, 'rank':
-                                                      -1}],
-                                                     [{'color': 'W', 'rank': 2},
-                                                      {'color': 'Y', 'rank': 4},
-                                                      {'color': 'Y', 'rank': 2},
-                                                      {'color': 'G', 'rank': 0},
-                                                      {'color': 'W', 'rank':
-                                                      1}]],
-                                  'num_players': 2,
-                                  'vectorized': [ 0, 0, 1, ... ]}]}
-    """
+    """Resets the environment for a new game."""
     self.state = self.game.new_initial_state()
 
     while self.state.cur_player() == pyhanabi.CHANCE_PLAYER_ID:
@@ -233,114 +135,11 @@ class HanabiEnv(Environment):
     """
     return self.game.max_moves()
 
-  def step(self, action, debugMode=False):
-    """Take one step in the game.
+  def step(self, action):
+    debug = True
 
-    Args:
-      action: dict, mapping to a legal action taken by an agent. The following
-        actions are supported:
-          - { 'action_type': 'PLAY', 'card_index': int }
-          - { 'action_type': 'DISCARD', 'card_index': int }
-          - {
-              'action_type': 'REVEAL_COLOR',
-              'color': str,
-              'target_offset': int >=0
-            }
-          - {
-              'action_type': 'REVEAL_RANK',
-              'rank': str,
-              'target_offset': int >=0
-            }
-        Alternatively, action may be an int in range [0, num_moves()).
+    if debug: print("Player {} action: {}".format(self.state.cur_player(), action))
 
-    Returns:
-      observation: dict, containing the full observation about the game at the
-        current step. *WARNING* This observation contains all the hands of the
-        players and should not be passed to the agents.
-        An example observation:
-        {'current_player': 0,
-         'player_observations': [{'current_player': 0,
-                            'current_player_offset': 0,
-                            'deck_size': 40,
-                            'discard_pile': [],
-                            'fireworks': {'B': 0,
-                                      'G': 0,
-                                      'R': 0,
-                                      'W': 0,
-                                      'Y': 0},
-                            'information_tokens': 8,
-                            'legal_moves': [{'action_type': 'PLAY',
-                                         'card_index': 0},
-                                        {'action_type': 'PLAY',
-                                         'card_index': 1},
-                                        {'action_type': 'PLAY',
-                                         'card_index': 2},
-                                        {'action_type': 'PLAY',
-                                         'card_index': 3},
-                                        {'action_type': 'PLAY',
-                                         'card_index': 4},
-                                        {'action_type': 'REVEAL_COLOR',
-                                         'color': 'R',
-                                         'target_offset': 1},
-                                        {'action_type': 'REVEAL_COLOR',
-                                         'color': 'G',
-                                         'target_offset': 1},
-                                        {'action_type': 'REVEAL_COLOR',
-                                         'color': 'B',
-                                         'target_offset': 1},
-                                        {'action_type': 'REVEAL_RANK',
-                                         'rank': 0,
-                                         'target_offset': 1},
-                                        {'action_type': 'REVEAL_RANK',
-                                         'rank': 1,
-                                         'target_offset': 1},
-                                        {'action_type': 'REVEAL_RANK',
-                                         'rank': 2,
-                                         'target_offset': 1}],
-                            'life_tokens': 3,
-                            'observed_hands': [[{'color': None, 'rank': -1},
-                                            {'color': None, 'rank': -1},
-                                            {'color': None, 'rank': -1},
-                                            {'color': None, 'rank': -1},
-                                            {'color': None, 'rank': -1}],
-                                           [{'color': 'G', 'rank': 2},
-                                            {'color': 'R', 'rank': 0},
-                                            {'color': 'R', 'rank': 1},
-                                            {'color': 'B', 'rank': 0},
-                                            {'color': 'R', 'rank': 1}]],
-                            'num_players': 2,
-                            'vectorized': [ 0, 0, 1, ... ]},
-                           {'current_player': 0,
-                            'current_player_offset': 1,
-                            'deck_size': 40,
-                            'discard_pile': [],
-                            'fireworks': {'B': 0,
-                                      'G': 0,
-                                      'R': 0,
-                                      'W': 0,
-                                      'Y': 0},
-                            'information_tokens': 8,
-                            'legal_moves': [],
-                            'life_tokens': 3,
-                            'observed_hands': [[{'color': None, 'rank': -1},
-                                            {'color': None, 'rank': -1},
-                                            {'color': None, 'rank': -1},
-                                            {'color': None, 'rank': -1},
-                                            {'color': None, 'rank': -1}],
-                                           [{'color': 'W', 'rank': 2},
-                                            {'color': 'Y', 'rank': 4},
-                                            {'color': 'Y', 'rank': 2},
-                                            {'color': 'G', 'rank': 0},
-                                            {'color': 'W', 'rank': 1}]],
-                            'num_players': 2,
-                            'vectorized': [ 0, 0, 1, ... ]}]}
-      reward: float, Reward obtained from taking the action.
-      done: bool, Whether the game is done.
-      info: dict, Optional debugging information.
-
-    Raises:
-      AssertionError: When an illegal action is provided.
-    """
     if isinstance(action, dict):
       # Convert dict action HanabiMove
       action = self._build_move(action)
@@ -350,27 +149,34 @@ class HanabiEnv(Environment):
     else:
       raise ValueError("Expected action as dict or int, got: {}".format(
           action))
-
     last_score = self.state.score()
 
-    # RETURN considerations
+    # RETURN considerations: Note this should eventually become redundant as replace_cards will handle it
     if action.type() == pyhanabi.HanabiMoveType.RETURN:
       valid_cards = self.state.valid_cards(self.state.cur_player(), action.card_index())
       replacement_card = random.choice(valid_cards)
-      if debugMode: print("MB: return card {}".format(self.state.player_hands()[self.state.cur_player()][action.card_index()]))
-      if debugMode: print("MB: replace with card {}".format(replacement_card))
+      if debug: print("MB: return card {}".format(self.state.player_hands()[self.state.cur_player()][action.card_index()]))
+      if debug: print("MB: replace with card {}".format(replacement_card))
 
     # Apply the action to the state
     self.state.apply_move(action)
+    done = self.state.is_terminal()
 
+    # MB: Deals with standard scenario if player need another card
     while self.state.cur_player() == pyhanabi.CHANCE_PLAYER_ID:
       if action.type() == pyhanabi.HanabiMoveType.RETURN:
-        if debugMode: print("MB: Dealing specific card: {}".format(replacement_card))
+        if debug: print("MB: Dealing specific card: {}".format(replacement_card))
         self.state.deal_specific_card(replacement_card.color(), replacement_card.rank(), action.card_index())
       else:
+        if debug: print("MB: Dealing random card")
         self.state.deal_random_card()
+
+    # MB: Now it is on next player, need to replace their hand before making observations
+    self.state.replace_hand(self.state.cur_player())
+    if debug: self.print_state()
+    # MB: Now make observation, as it includes the new hand now
     observation = self._make_observation_all_players()
-    done = self.state.is_terminal()
+
     # Reward is score differential. May be large and negative at game end.
     reward = self.state.score() - last_score
     info = {}

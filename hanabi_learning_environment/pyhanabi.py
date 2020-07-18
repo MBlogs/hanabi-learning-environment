@@ -18,6 +18,7 @@ import re
 import cffi
 import enum
 import sys
+import random
 
 DEFAULT_CDEF_PREFIXES = (None, ".", os.path.dirname(__file__), "/include")
 DEFAULT_LIB_PREFIXES = (None, ".", os.path.dirname(__file__), "/lib")
@@ -708,7 +709,7 @@ class HanabiState(object):
       for card_index_i in range(len(self.player_hands()[other_player])):
         # MB: For now, also peek at rest of own hand and remove all those not at card_index
         if other_player == player and card_index_i == card_index:
-          continue  # skip over the player that we ask for valid cards for.
+          continue  # skip over the player's card that we ask for valid cards for.
         card = self.player_hands()[other_player][card_index_i]
         self._deck.remove_card(card.color(), card.rank())
         # if debug: print("MB: card removed {}{}".format(color_idx_to_char(card.color()),card.rank()+1))
@@ -721,7 +722,6 @@ class HanabiState(object):
 
     # MB: Finally use card knowledge player has about own hand from hints
     # MB: ! If retrieving something via C++ wrapper method need to assign to object first!
-    # MB: Tried below all in one line and it choked
     temp_observation = self.observation(player)
     card_knowledge = temp_observation.card_knowledge()[0][card_index]
     self._deck.remove_by_card_knowledge(card_knowledge)
@@ -730,6 +730,25 @@ class HanabiState(object):
     if debug: print("MB: Valid cards for player {} in position: {} are: {}".format(player,card_index,self._deck))
     return self._deck.return_cards()
 
+  def valid_card(self, player, card_index):
+    return random.choice(self.valid_cards(player, card_index))
+
+  def replace_hand(self, player):
+    """Redeterminise a player's hand based on valid permuation"""
+    debug = False
+    assert player == self.cur_player()
+    if debug: print("MB: cur_player() before replacing hand {}".format(self.cur_player()))
+    for card_index in range(len(self.player_hands()[player])):
+      # MB: There is a possibility when redeterminising that the hand ends up no longer valid
+      valid_card = self.valid_card(player, card_index)
+      assert valid_card is not None # MB: This is where it could slip up; intra-hand conflict
+      return_move = HanabiMove.get_return_move(card_index=card_index)
+      self.apply_move(return_move)
+      if debug: print("MB: cur_player() before deal move {}".format(self.cur_player()))
+      deal_specific_move = HanabiMove.get_deal_specific_move(valid_card.color(), valid_card.rank(), card_index)
+      self.apply_move(deal_specific_move)
+      if debug: print("MB: cur_player() after deal move {}".format(self.cur_player()))
+    if debug: print("MB: cur_player() after replacing hand {}".format(self.cur_player()))
 
 
 class HanabiDeck(object):
