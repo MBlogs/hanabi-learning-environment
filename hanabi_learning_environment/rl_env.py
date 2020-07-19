@@ -136,7 +136,7 @@ class HanabiEnv(Environment):
     return self.game.max_moves()
 
   def step(self, action):
-    debug = True
+    debug = False
 
     if debug: print("Player {} action: {}".format(self.state.cur_player(), action))
 
@@ -151,13 +151,6 @@ class HanabiEnv(Environment):
           action))
     last_score = self.state.score()
 
-    # RETURN considerations: Note this should eventually become redundant as replace_cards will handle it
-    if action.type() == pyhanabi.HanabiMoveType.RETURN:
-      valid_cards = self.state.valid_cards(self.state.cur_player(), action.card_index())
-      replacement_card = random.choice(valid_cards)
-      if debug: print("MB: return card {}".format(self.state.player_hands()[self.state.cur_player()][action.card_index()]))
-      if debug: print("MB: replace with card {}".format(replacement_card))
-
     # Apply the action to the state
     self.state.apply_move(action)
     if debug: print("MB: Applied the action")
@@ -165,13 +158,8 @@ class HanabiEnv(Environment):
 
     # MB: Deals with standard scenario if player need another card
     while self.state.cur_player() == pyhanabi.CHANCE_PLAYER_ID:
-      if action.type() == pyhanabi.HanabiMoveType.RETURN:
-        if debug: print("MB: Dealing specific card: {}".format(replacement_card))
-        self.state.deal_specific_card(replacement_card.color(), replacement_card.rank(), action.card_index())
-      else:
-        if debug: print("MB: Dealing random card")
-        self.state.deal_random_card()
-    if debug: print("MB: Passed dealing of the card")
+      if debug: print("MB: Dealing random card")
+      self.state.deal_random_card()
 
     # MB: Now it is on next player. Should be able to replace fine; will be precisely their own.
     self.state.replace_hand(self.state.cur_player())

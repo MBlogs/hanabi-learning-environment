@@ -94,7 +94,7 @@ bool GetReturnMove(int card_index, pyhanabi_move_t* move);
 bool GetPlayMove(int card_index, pyhanabi_move_t* move);
 bool GetRevealColorMove(int target_offset, int color, pyhanabi_move_t* move);
 bool GetRevealRankMove(int target_offset, int rank, pyhanabi_move_t* move);
-bool GetDealSpecificMove(int color, int rank, int card_index, pyhanabi_move_t* move);
+bool GetDealSpecificMove(int card_index, int player, int color, int rank,pyhanabi_move_t* move);
 
 /* HistoryItem functions. */
 void DeleteHistoryItem(pyhanabi_history_item_t* item);

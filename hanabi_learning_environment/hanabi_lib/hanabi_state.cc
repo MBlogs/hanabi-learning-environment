@@ -274,7 +274,8 @@ bool HanabiState::MoveIsLegal(HanabiMove move) const {
 
 void HanabiState::ApplyMove(HanabiMove move) {
   REQUIRE(MoveIsLegal(move));
-  if (deck_.Empty()) {
+  //MB: DealSpecific and Return can happen freely. Others mean it is now end game turns.
+  if (deck_.Empty() && move.MoveType() != HanabiMove::kDealSpecific && move.MoveType()!= HanabiMove::kReturn) {
     --turns_to_play_;
   }
   // MB: Do we really want a RETURN or DEALSPECFIC move to add to history? Might have to deal with this in history
@@ -282,6 +283,7 @@ void HanabiState::ApplyMove(HanabiMove move) {
   history.player = cur_player_;
   switch (move.MoveType()) {
     case HanabiMove::kDeal: {
+        //MB: Usuallly, deal returns an empty card
         history.deal_to_player = PlayerToDeal();
         HanabiHand::CardKnowledge card_knowledge(ParentGame()->NumColors(),
                                       ParentGame()->NumRanks());
@@ -295,8 +297,8 @@ void HanabiState::ApplyMove(HanabiMove move) {
       }
       break;
     case HanabiMove::kDealSpecific: {
-        history.deal_to_player = PlayerToDeal();
-        //MB: Need to make sure DealSpecific enforces card_index passing
+        //MB: Important note: TargetOffset is bastardised here; really its just the absolute player id dealt to
+        history.deal_to_player = move.TargetOffset();
         hands_[history.deal_to_player].InsertCard(
             deck_.DealCard(move.Color(), move.Rank()), move.CardIndex());
       }

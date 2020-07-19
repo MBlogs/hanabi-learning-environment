@@ -187,10 +187,10 @@ bool GetReturnMove(int card_index, pyhanabi_move_t* move) {
   return move->move != nullptr;
 }
 
-bool GetDealSpecificMove(int color, int rank,int card_index, pyhanabi_move_t* move) {
+bool GetDealSpecificMove(int card_index, int player, int color, int rank, pyhanabi_move_t* move) {
   REQUIRE(move != nullptr);
   move->move = new hanabi_learning_env::HanabiMove(
-      hanabi_learning_env::HanabiMove::kDealSpecific, card_index, -1, color, rank);
+      hanabi_learning_env::HanabiMove::kDealSpecific, card_index, player, color, rank);
   return move->move != nullptr;
 }
 

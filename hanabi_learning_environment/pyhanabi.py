@@ -341,9 +341,9 @@ class HanabiMove(object):
     return HanabiMove(c_move)
 
   @staticmethod
-  def get_deal_specific_move(color, rank, card_index):
+  def get_deal_specific_move(card_index, player, color, rank):
     c_move = ffi.new("pyhanabi_move_t*")
-    assert lib.GetDealSpecificMove(color, rank,card_index, c_move)
+    assert lib.GetDealSpecificMove(card_index, player, color, rank, c_move)
     return HanabiMove(c_move)
 
   @staticmethod
@@ -696,7 +696,7 @@ class HanabiState(object):
     """MB: Return list of HanabiCard that are a valid swap for the one questioned"""
     # Note: We know the state. For efficency and simplicity a direct GetDeck should have been implemented.
     # Then the only check needed is the card_knowledge check
-    debug = True
+    debug = False
     if debug: print("MB:  Replacing {}".format(self.player_hands()[player][card_index]))
     self._deck.reset_deck()
 
@@ -716,8 +716,10 @@ class HanabiState(object):
     # MB: Finally use card knowledge player has about own hand from hints
     # MB: ! If retrieving something via C++ wrapper method need to assign to object first!
     temp_observation = self.observation(player)
+    if debug: print("MB: valid_cards. Getting card_knowledge from player {} perspective".format(player))
     if debug: print("MB: valid cards attempting to access card_index {}".format(card_index))
-    if debug: print(temp_observation)
+    # MB: Is it assured that card_knowledge()[0] is the right call here?
+    # Yes because the observation was player based.So the first will be the same as player
     card_knowledge = temp_observation.card_knowledge()[0][card_index]
     if debug: print("MB: valid cards retrieved card_knowledge")
     self._deck.remove_by_card_knowledge(card_knowledge)
@@ -731,19 +733,20 @@ class HanabiState(object):
 
   def replace_hand(self, player):
     """Redeterminise a player's hand based on valid permuation"""
-    debug = True
+    debug = False
     assert player == self.cur_player()
     for card_index in range(len(self.player_hands()[player])):
       # MB: There is a possibility when redeterminising that the hand ends up no longer valid
       valid_card = self.valid_card(player, card_index)
-      if debug: print("MB: replace_hand passed valid_cards")
+      if debug: print("MB: replace_hand will replace {} with {} for player {}".format(self.player_hands()[player][card_index],valid_card,player))
       assert valid_card is not None # MB: This is where it could slip up; intra-hand conflict
       return_move = HanabiMove.get_return_move(card_index=card_index)
       self.apply_move(return_move)
       if debug: print("MB: replace_hand passed return move")
-      deal_specific_move = HanabiMove.get_deal_specific_move(valid_card.color(), valid_card.rank(), card_index)
+      # Check where this is dealt to
+      deal_specific_move = HanabiMove.get_deal_specific_move(card_index, player, valid_card.color(), valid_card.rank())
       self.apply_move(deal_specific_move)
-      if debug: print("MB: replace_hand passed deal specific move")
+      if debug: print("MB: replace_hand successfully replaced that card")
 
 
 class HanabiDeck(object):
@@ -1024,18 +1027,22 @@ class HanabiObservation(object):
     Each HanabiCardKnowledge for a card gives the knowledge about the cards
     accumulated over all past reveal actions.
     """
-    # print("MB: Entered card_knowledge")
+    debug = False
     card_knowledge_list = []
     for pid in range(self.num_players()):
       player_card_knowledge = []
+      # MB: This gets desynched after retrun/deal specific move
       hand_size = lib.ObsGetHandSize(self._observation, pid)
       for i in range(hand_size):
         c_knowledge = ffi.new("pyhanabi_card_knowledge_t*")
+        #if debug: print("MB: card_knowledge() trying to retrieve CardKnowledge for {}".format(pid))
+        c_card = ffi.new("pyhanabi_card_t*")
+        lib.ObsGetHandCard(self._observation, pid, i, c_card)
         lib.ObsGetHandCardKnowledge(self._observation, pid, i, c_knowledge)
         player_card_knowledge.append(HanabiCardKnowledge(c_knowledge))
+        if debug: print("MB: card_knowledge {} for card in hand {} retrieved for pid {}, card {}, hand_size {}".format(
+          HanabiCardKnowledge(c_knowledge),HanabiCard(c_card.color,c_card.rank), pid ,i ,hand_size))
       card_knowledge_list.append(player_card_knowledge)
-      #print("MB: Appended knowledge player {}".format(pid))
-    #print("MB: Returned card knowledge")
     return card_knowledge_list
 
   def discard_pile(self):
